@@ -1,16 +1,209 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<?import javafx.scene.control.Button?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.mailclientserver.HelloController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-    </padding>
-
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
-</VBox>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <left>
+      <VBox prefHeight="700.0" prefWidth="231.0" spacing="20.0" styleClass="primary-color" stylesheets="@styles.css" BorderPane.alignment="CENTER">
+         <children>
+            <Label prefHeight="40.0" prefWidth="114.0" text="Mail" textFill="WHITE">
+               <font>
+                  <Font size="18.0" />
+               </font>
+               <VBox.margin>
+                  <Insets left="10.0" top="10.0" />
+               </VBox.margin>
+            </Label>
+            <ImageView fitHeight="35.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
+               <VBox.margin>
+                  <Insets left="10.0" />
+               </VBox.margin>
+               <image>
+                  <Image url="@../../../img/hamburgerWhite.png" />
+               </image>
+            </ImageView>
+            <VBox prefHeight="506.0" prefWidth="300.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" prefHeight="61.0" prefWidth="300.0" spacing="10.0" styleClass="selected" stylesheets="@styles.css">
+                     <children>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/plusWhite.png" />
+                           </image>
+                        </ImageView>
+                        <Label text="Scrivi Nuova Mail" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </HBox>
+                  <VBox alignment="CENTER" prefHeight="87.0" prefWidth="300.0" stylesheets="@styles.css">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="39.0" prefWidth="295.0">
+                           <children>
+                              <Label text="Mail" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="20.0" />
+                                 </font>
+                              </Label>
+                              <Pane prefHeight="56.0" prefWidth="119.0" />
+                              <Label text="99+" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold" size="20.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <Label prefHeight="30.0" prefWidth="200.0" text="MyEmail@mail.com" textFill="WHITE">
+                           <font>
+                              <Font size="17.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <styleClass>
+                        <String fx:value="selected" />
+                        <String fx:value="left-side-border" />
+                     </styleClass>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </left>
+   <center>
+      <VBox prefHeight="200.0" prefWidth="100.0" styleClass="white-background" stylesheets="@styles.css" BorderPane.alignment="CENTER">
+         <children>
+            <HBox alignment="CENTER" prefHeight="59.0" prefWidth="380.0" spacing="10.0">
+               <children>
+                  <HBox alignment="CENTER" maxHeight="-Infinity" prefHeight="40.0" prefWidth="270.0" styleClass="search-bar" stylesheets="@styles.css">
+                     <children>
+                        <TextField prefHeight="35.0" prefWidth="237.0" styleClass="transparent" stylesheets="@styles.css" />
+                        <ImageView fitHeight="26.0" fitWidth="29.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/search.png" />
+                           </image>
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                        </ImageView>
+                     </children>
+                  </HBox>
+                  <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../img/refresh.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </HBox>
+            <HBox alignment="CENTER" prefHeight="50.0" prefWidth="380.0">
+               <children>
+                  <Label text="Inbox">
+                     <font>
+                        <Font name="System Bold" size="20.0" />
+                     </font>
+                  </Label>
+                  <Pane prefHeight="200.0" prefWidth="200.0" />
+                  <Label text="Tutte">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+                  <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../img/freccia-espandi.png" />
+                     </image>
+                     <HBox.margin>
+                        <Insets top="5.0" />
+                     </HBox.margin>
+                  </ImageView>
+               </children>
+            </HBox>
+            <ListView prefHeight="590.0" prefWidth="468.0" />
+         </children>
+      </VBox>
+   </center>
+   <right>
+      <VBox prefHeight="700.0" prefWidth="689.0" BorderPane.alignment="CENTER">
+         <children>
+            <HBox alignment="CENTER_RIGHT" prefHeight="70.0" prefWidth="200.0" spacing="15.0">
+               <children>
+                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                     <children>
+                        <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/reply.png" />
+                           </image>
+                        </ImageView>
+                        <Label text="Rispondi">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="169.0">
+                     <children>
+                        <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/reply-all.png" />
+                           </image>
+                        </ImageView>
+                        <Label text="Rispondi a tutti">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                     <children>
+                        <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/forward.png" />
+                           </image>
+                        </ImageView>
+                        <Label text="Inoltra">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                     <children>
+                        <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/trash.png" />
+                           </image>
+                        </ImageView>
+                        <Label text="Elimina">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+               </children>
+               <VBox.margin>
+                  <Insets left="20.0" right="20.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+      </VBox>
+   </right>
+</BorderPane>

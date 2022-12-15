@@ -1,0 +1,27 @@
+.primary-color{
+    -fx-background-color: #ff71a8;
+}
+
+
+.left-side-border{
+    -fx-border-color: #fff;
+    -fx-border-width: 0 0 0 5;
+}
+
+.selected:hover{
+    -fx-border-color: #fff;
+    -fx-border-width: 0 0 0 5;
+    -fx-background-color: #FFB2D0;
+}
+
+.transparent{
+    -fx-background-color: rgba(0, 0, 0, 0);
+}
+
+.white-background{
+    -fx-background-color: #fff;
+}
+
+.search-bar{
+    -fx-border-color: #A5A5A5;
+}
