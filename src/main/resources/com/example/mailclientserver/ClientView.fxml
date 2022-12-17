@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.mailclientserver.ClientController">
    <left>
       <VBox prefHeight="700.0" prefWidth="231.0" spacing="20.0" styleClass="primary-color" stylesheets="@styles.css" BorderPane.alignment="CENTER">
          <children>
@@ -25,17 +25,9 @@
                   <Insets left="10.0" top="10.0" />
                </VBox.margin>
             </Label>
-            <ImageView fitHeight="35.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
-               <VBox.margin>
-                  <Insets left="10.0" />
-               </VBox.margin>
-               <image>
-                  <Image url="@../../../img/hamburgerWhite.png" />
-               </image>
-            </ImageView>
             <VBox prefHeight="506.0" prefWidth="300.0">
                <children>
-                  <HBox alignment="CENTER_LEFT" prefHeight="61.0" prefWidth="300.0" spacing="10.0" styleClass="selected" stylesheets="@styles.css">
+                  <HBox fx:id="buttonNuovaEmail" alignment="CENTER_LEFT" onMouseClicked="#paginaScriviMail" prefHeight="61.0" prefWidth="300.0" spacing="10.0" styleClass="selected" stylesheets="@styles.css">
                      <children>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -62,14 +54,14 @@
                                  </font>
                               </Label>
                               <Pane prefHeight="56.0" prefWidth="119.0" />
-                              <Label text="99+" textFill="WHITE">
+                              <Label fx:id="counterEmails" text="99+" textFill="WHITE">
                                  <font>
                                     <Font name="System Bold" size="20.0" />
                                  </font>
                               </Label>
                            </children>
                         </HBox>
-                        <Label prefHeight="30.0" prefWidth="200.0" text="MyEmail@mail.com" textFill="WHITE">
+                        <Label fx:id="emailAddressLabel" prefHeight="30.0" prefWidth="200.0" text="random@r.rand" textFill="WHITE">
                            <font>
                               <Font size="17.0" />
                            </font>
