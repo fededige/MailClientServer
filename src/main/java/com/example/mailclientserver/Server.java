@@ -3,8 +3,10 @@ package com.example.mailclientserver;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 public class Server {
     private static ServerSocket serverSocket;
@@ -69,6 +71,14 @@ class ThreadedServer implements Runnable {
         try {
             try {
                 System.out.println("RUN connesione avvenuta:" + " " + Thread.currentThread().getName());
+                BufferedReader in =  new BufferedReader(new InputStreamReader(incoming.getInputStream()));
+                Writer out = new BufferedWriter(new OutputStreamWriter(incoming.getOutputStream(), StandardCharsets.UTF_8));
+                String line = null;
+                while((line = in.readLine()) != null){
+                    System.out.println("line: " + line);
+                    out.append(checkEmail(line)).append("\n");
+                    out.flush();
+                }
                 Thread.sleep(15000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -78,6 +88,13 @@ class ThreadedServer implements Runnable {
             }
         }
         catch (IOException e) {e.printStackTrace();}
+    }
+
+
+    private String checkEmail(String emailAddress) {
+        System.out.println(emailAddress);
+        String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+        return Pattern.compile(regexPattern).matcher(emailAddress).matches() ? emailAddress : "Email non valida";
     }
 
 }

@@ -1,6 +1,7 @@
 package com.example.mailclientserver;
 
 import com.example.mailclientserver.model.Client;
+import com.example.mailclientserver.model.Email;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,13 +10,14 @@ import javafx.scene.control.Label;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.io.SyncFailedException;
-import java.util.List;
+import java.io.*;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class ClientController {
+    private Socket socket;
     private Client client;
     @FXML
     private Label emailAddressLabel;
@@ -23,13 +25,9 @@ public class ClientController {
     private Label counterEmails;
 
     @FXML
-    public void initialize() throws Exception {
-        //System.out.println(getClass().getResource("ClientView.fxml"));
+    public void initialize(String emailAddress) throws Exception {
         if (this.client != null)
             throw new IllegalStateException("Model can only be initialized once");
-        System.out.println("inserisci mail");
-        Scanner in = new Scanner(System.in);
-        String emailAddress = checkEmail(in.nextLine());
         if(emailAddress != null){
             client = new Client(emailAddress);
         }
@@ -43,13 +41,14 @@ public class ClientController {
 
     @FXML
     public void paginaScriviMail() {
-        System.out.println("ciaociao");
         Parent root;
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ClientView.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ScriviEmail.fxml"));
             Stage newStage = new Stage();
             newStage.setTitle("Scrivi mail");
             newStage.setScene(new Scene(fxmlLoader.load(), 700, 500));
+            ScriviEmailController scriviEmailController = fxmlLoader.getController();
+            scriviEmailController.setSocket(socket); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
             newStage.initModality(Modality.APPLICATION_MODAL);
             newStage.showAndWait();
         }
@@ -57,11 +56,7 @@ public class ClientController {
             e.printStackTrace();
         }
     }
-
-
-    private String checkEmail(String emailAddress) {
-        String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
-                + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-        return Pattern.compile(regexPattern).matcher(emailAddress).matches() ? emailAddress : null;
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 }

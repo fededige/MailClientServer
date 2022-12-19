@@ -25,3 +25,7 @@
 .search-bar{
     -fx-border-color: #A5A5A5;
 }
+
+.send_button{
+    -fx-border-color: #A5A5A5;
+}
