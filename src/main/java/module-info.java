@@ -6,4 +6,6 @@ module com.example.mailclientserver {
 
     opens com.example.mailclientserver to javafx.fxml;
     exports com.example.mailclientserver;
+    exports com.example.mailclientserver.messaggio;
+    opens com.example.mailclientserver.messaggio to javafx.fxml;
 }

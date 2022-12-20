@@ -19,6 +19,8 @@ import java.util.regex.Pattern;
 public class ClientController {
     private Socket socket;
     private Client client;
+    private ObjectOutputStream outputStream;
+    private ObjectInputStream inputStream;
     @FXML
     private Label emailAddressLabel;
     @FXML
@@ -48,7 +50,7 @@ public class ClientController {
             newStage.setTitle("Scrivi mail");
             newStage.setScene(new Scene(fxmlLoader.load(), 700, 500));
             ScriviEmailController scriviEmailController = fxmlLoader.getController();
-            scriviEmailController.setSocket(socket); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
+            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outputStream, this.inputStream); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
             newStage.initModality(Modality.APPLICATION_MODAL);
             newStage.showAndWait();
         }
@@ -56,7 +58,9 @@ public class ClientController {
             e.printStackTrace();
         }
     }
-    public void setSocket(Socket socket) {
+    public void initParm(Socket socket, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
         this.socket = socket;
+        this.outputStream = outputStream;
+        this.inputStream = inputStream;
     }
 }

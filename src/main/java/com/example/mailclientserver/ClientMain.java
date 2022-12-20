@@ -1,5 +1,6 @@
 package com.example.mailclientserver;
 
+import com.example.mailclientserver.messaggio.Messaggio;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -7,11 +8,11 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ClientMain extends Application {
-    Socket socket;
+    private Socket socket;
     public void openConnection(String ip, int port){
         while(true) {
             try {
@@ -32,14 +33,17 @@ public class ClientMain extends Application {
         System.out.println("sono il client");
         openConnection("127.0.0.1", 4445);
         System.out.println("connesso");
-        Writer out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-        BufferedReader inServer =  new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+        ObjectOutputStream outStream = new ObjectOutputStream(socket.getOutputStream());
+        //System.out.println("dopo out");
+        ObjectInputStream inStream = new ObjectInputStream(socket.getInputStream());
+        //System.out.println("dopo in");
+
         System.out.println("inserisci mail");
         Scanner in = new Scanner(System.in);
         String emailAddress = in.nextLine();
-        out.append(emailAddress).append("\n");
-        out.flush();
-        emailAddress = inServer.readLine();
+        outStream.writeObject(new Messaggio(0, emailAddress));
+        emailAddress = (String)inStream.readObject();
         System.out.println(emailAddress);
         if(!(emailAddress.equals("Email non valida"))){
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ClientView.fxml"));
@@ -49,7 +53,7 @@ public class ClientMain extends Application {
             ClientController clientController = fxmlLoader.getController();
             System.out.println(clientController);
             clientController.initialize(emailAddress);
-            clientController.setSocket(socket);
+            clientController.initParm(socket, outStream, inStream);
         }
     }
 

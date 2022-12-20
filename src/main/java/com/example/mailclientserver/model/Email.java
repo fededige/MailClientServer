@@ -1,9 +1,10 @@
 package com.example.mailclientserver.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Email {
+public class Email implements Serializable {
 
     private String sender;
     private List<String> receivers;
