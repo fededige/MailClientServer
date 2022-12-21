@@ -52,8 +52,8 @@ public class ClientMain extends Application {
             stage.show();
             ClientController clientController = fxmlLoader.getController();
             System.out.println(clientController);
+            clientController.initParam(socket, outStream, inStream);
             clientController.initialize(emailAddress);
-            clientController.initParm(socket, outStream, inStream);
         }
     }
 

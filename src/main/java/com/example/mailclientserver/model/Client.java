@@ -1,32 +1,26 @@
 package com.example.mailclientserver.model;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 public class Client {
     private final ListProperty<Email> inbox;
     private final ObservableList<Email> inboxContent;
     private final StringProperty emailAddress;
-    private final StringProperty emailsCount;
+    private final IntegerBinding emailsCount;
 
-    /**
-     * Costruttore della classe.
-     *
-     * @param emailAddress   indirizzo email
-     *
-     */
 
     public Client(String emailAddress) {
         this.inboxContent = FXCollections.observableList(new LinkedList<>());
         this.inbox = new SimpleListProperty<>();
         this.inbox.set(inboxContent);
-        this.emailsCount = new SimpleStringProperty();
-        this.emailsCount.set(Integer.toString(inboxContent.size()));
+        this.emailsCount = Bindings.size(inboxContent);
         this.emailAddress = new SimpleStringProperty(emailAddress);
     }
 
@@ -42,7 +36,13 @@ public class Client {
         inboxContent.remove(email);
     }
 
-    public StringProperty getEmailsCount(){
+    public void setInboxContent(List<Email> emails) {
+        inboxContent.remove(0, inboxContent.size());
+        System.out.println("client:" + inboxContent.size());
+        inboxContent.addAll(emails);
+    }
+
+    public IntegerBinding getEmailsCount(){
         return emailsCount;
     }
 }

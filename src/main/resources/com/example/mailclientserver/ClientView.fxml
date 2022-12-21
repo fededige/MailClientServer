@@ -125,7 +125,7 @@
                   </ImageView>
                </children>
             </HBox>
-            <ListView prefHeight="590.0" prefWidth="468.0" />
+            <ListView fx:id="listEmail" prefHeight="590.0" prefWidth="468.0" />
          </children>
       </VBox>
    </center>

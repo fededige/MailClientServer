@@ -11,10 +11,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
+import com.google.gson.Gson;
 
 public class Server {
     private static ServerSocket serverSocket;
@@ -22,7 +24,7 @@ public class Server {
     static int NUM_THREAD = 5;
     static ExecutorService exec = null;
     boolean flag = false;
-    private static List<String> clientEmails = new ArrayList<>();
+    private static List<String> clientsEmail = new ArrayList<>();
 
     public void listen(int port) {
         try {
@@ -30,9 +32,9 @@ public class Server {
             System.out.println("in attesa di connesioni");
             int i = 0;
             flag = true;
-            while (flag && i < 6){//out passata al task collegata all'in unico per tutti
+            while (flag && i < 20){//out passata al task collegata all'in unico per tutti
                 socket = serverSocket.accept();
-                Runnable task = new ThreadedServer(socket, i, clientEmails);
+                Runnable task = new ThreadedServer(socket, i, clientsEmail);
                 i++;
                 exec.execute(task);
             }
@@ -55,13 +57,43 @@ public class Server {
         try(BufferedReader fileInputReader = Files.newBufferedReader(inputFilePath, StandardCharsets.UTF_8)){
             String line = null;
             while((line = fileInputReader.readLine()) != null){
-                (clientEmails).add(line.trim());
+                (clientsEmail).add(line.trim()); //.split("@")[0] forse
+            }
+        }
+    }
+    private static void checkFolders() throws IOException {
+        String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle";
+        File file = new File(casellePath);
+        String[] directories = file.list();
+        List<String> directoriesList = new ArrayList<>();
+        if(directories != null){
+            directoriesList = Arrays.asList(directories);
+        }
+        for(String c : clientsEmail){
+            String nomeClient = c.split("@")[0];
+            if(!(directoriesList.contains(nomeClient)) || !(folderIsValid(nomeClient, casellePath))){
+                Path path = Paths.get(casellePath + "/" +  nomeClient + "/inviate");
+                Files.createDirectories(path);
+                path = Paths.get(casellePath + "/" +  nomeClient + "/ricevute");
+                Files.createDirectories(path);
             }
         }
     }
 
+    private static boolean folderIsValid(String nomeClient, String casellePath) {
+        File file = new File(casellePath+"/"+nomeClient);
+        String[] subDirectories = file.list();
+        List<String> subDirectoriesList = new ArrayList<>();
+        if(subDirectories != null){
+            subDirectoriesList = Arrays.asList(subDirectories);
+        }
+        return subDirectoriesList.contains("inviate") && subDirectoriesList.contains("ricevute");
+    }
+
+
     public static void main(String[] args) throws IOException {
         updateClients();
+        checkFolders();
         exec = Executors.newFixedThreadPool(NUM_THREAD);
         System.out.println("Sono il server");
         Server server = new Server();
@@ -108,11 +140,12 @@ class ThreadedServer implements Runnable {
                             break;
                         case 1:
                             Email emailcompleta = (Email) m.getContent();
-                            System.out.println(emailcompleta.getSender());
-                            System.out.println(emailcompleta.getReceivers().get(0));
-                            System.out.println(emailcompleta.getSubject());
-                            System.out.println(emailcompleta.getText());
+                            smistaEmail(emailcompleta);
                             break;
+                        case 2:
+                            String client = (String) m.getContent();
+                            outStream.writeObject(updateEmailList(client));
+                        case 3: //TODO: gracefull shutdown
                     }
                 }
                 System.out.println("fuori dal while");
@@ -127,10 +160,56 @@ class ThreadedServer implements Runnable {
         catch (IOException e) {e.printStackTrace();}
     }
 
+    private synchronized void smistaEmail(Email emailcompleta) {
+        String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
+        try {
+            String[] tempo = (java.time.LocalDateTime.now().toString().substring(0, 24)).split(":");
+            Path newFilePath = Paths.get(casellePath + (emailcompleta.getSender()).split("@")[0] + "/inviate/" + tempo[0] + "_" + tempo[1] + "_" + tempo[2] + ".txt");
+            Gson gson = new Gson();
+            Files.write(newFilePath, gson.toJson(emailcompleta).getBytes());
+            for(String receiver : emailcompleta.getReceivers()){
+                receiver = receiver.split("@")[0];
+                newFilePath = Paths.get(casellePath + receiver + "/ricevute/" + tempo[0] + "_" + tempo[1] + "_" + tempo[2] + ".txt");
+                gson = new Gson();
+                Files.write(newFilePath, gson.toJson(emailcompleta).getBytes());
+            }
+        }
+        catch (IOException e) {
+            System.out.println("Errore in smistaEmail: createFile");
+        }
+    }
+
 
     private String checkEmail(String emailAddress) {
         String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
         return Pattern.compile(regexPattern).matcher(emailAddress).matches() && clientEmails.contains(emailAddress) ? emailAddress : "Email non valida";
+    }
+
+
+    private synchronized List<Email> updateEmailList(String client) {
+        List<Email> emails = new ArrayList<>();
+        String casellaPath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/" + client;
+        for(int i = 0; i < 2; i++){
+            File file = new File(casellaPath + (i == 0 ? "/inviate" : "/ricevute"));
+            String[] emailPaths = file.list();
+            List<String> emailPathsList = new ArrayList<>();
+            if(emailPaths != null){
+                emailPathsList = Arrays.asList(emailPaths);
+            }
+            for(String name : emailPathsList){
+                Path path = Paths.get(casellaPath + (i == 0 ? "/inviate" : "/ricevute") + "/" + name);
+                System.out.println(path);
+                try{
+                    List<String> contents = Files.readAllLines(path);
+                    Email email = new Gson().fromJson(contents.get(0), Email.class);
+                    emails.add(email);
+                }catch(IOException e){
+                    System.out.println("Errore in updateEmailList: readAllLines");
+                    e.printStackTrace();
+                }
+            }
+        }
+        return emails;
     }
 
 }

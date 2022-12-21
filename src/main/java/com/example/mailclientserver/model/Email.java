@@ -51,6 +51,6 @@ public class Email implements Serializable {
      */
     @Override
     public String toString() {
-        return String.join(" - ", List.of(this.sender,this.subject));
+        return "Da: " + this.sender + " - Ogg: " + this.subject;
     }
 }

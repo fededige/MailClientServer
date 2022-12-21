@@ -59,10 +59,15 @@ public class ScriviEmailController {
                 EmailErroreLabel.setText("Email non valida");
             }else{
                 inviaEmail(listaDestinatari,OggettoTextField.getText(),TestoTextArea.getText());
+                updateEmail();
                 Stage stage = (Stage) EmailErroreLabel.getScene().getWindow();
                 stage.close();
             }
         }
+    }
+
+    private void updateEmail() throws IOException {
+        outputStream.writeObject(new Messaggio(2, this.senderEmail.split("@")[0]));
     }
 
     private void inviaEmail(List<String> destinatari, String Oggetto, String Testo) throws IOException {
