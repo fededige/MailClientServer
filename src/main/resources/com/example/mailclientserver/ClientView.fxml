@@ -84,45 +84,31 @@
    <center>
       <VBox prefHeight="200.0" prefWidth="100.0" styleClass="white-background" stylesheets="@styles.css" BorderPane.alignment="CENTER">
          <children>
-            <HBox alignment="CENTER" prefHeight="59.0" prefWidth="380.0" spacing="10.0">
-               <children>
-                  <HBox alignment="CENTER" maxHeight="-Infinity" prefHeight="40.0" prefWidth="270.0" styleClass="search-bar" stylesheets="@styles.css">
-                     <children>
-                        <TextField prefHeight="35.0" prefWidth="237.0" styleClass="transparent" stylesheets="@styles.css" />
-                        <ImageView fitHeight="26.0" fitWidth="29.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../../../img/search.png" />
-                           </image>
-                           <HBox.margin>
-                              <Insets />
-                           </HBox.margin>
-                        </ImageView>
-                     </children>
-                  </HBox>
-                  <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../img/refresh.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </HBox>
-            <HBox alignment="CENTER" prefHeight="50.0" prefWidth="380.0">
+            <HBox alignment="CENTER" prefHeight="50.0" prefWidth="380.0" spacing="10.0">
                <children>
                   <Label text="Inbox">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Pane prefHeight="200.0" prefWidth="200.0" />
-                  <MenuButton fx:id="sceltaInviateRicevute" mnemonicParsing="false" text="Inviate">
+                  <Pane prefHeight="50.0" prefWidth="163.0" />
+                  <MenuButton fx:id="sceltaInviateRicevute" mnemonicParsing="false" text="Ricevute">
                     <items>
-                      <MenuItem mnemonicParsing="false" text="Iviate" />
-                      <MenuItem mnemonicParsing="false" text="Ricevute" />
+                      <MenuItem mnemonicParsing="false" onAction="#showInviate" text="Inviate" />
+                      <MenuItem mnemonicParsing="false" onAction="#showRicevute" text="Ricevute" />
                     </items>
                   </MenuButton>
+                  <ImageView fx:id="aggiornaButton" fitHeight="25.0" fitWidth="25.0" onMouseClicked="#aggiornaPagina" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../img/refresh.png" />
+                     </image>
+                  </ImageView>
                </children>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
             </HBox>
-            <ListView fx:id="listEmail" onMouseClicked="#mostraMail" prefHeight="590.0" prefWidth="468.0" />
+            <ListView fx:id="listEmail" onMouseClicked="#mostraMail" prefHeight="655.0" prefWidth="359.0" />
          </children>
       </VBox>
    </center>
@@ -131,7 +117,7 @@
          <children>
             <HBox alignment="CENTER_RIGHT" prefHeight="70.0" prefWidth="650.0" spacing="15.0">
                <children>
-                  <HBox fx:id="RispondiButton" alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                  <HBox fx:id="RispondiButton" alignment="CENTER" onMouseClicked="#rispondiMittente" prefHeight="70.0" prefWidth="110.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -145,7 +131,7 @@
                         </Label>
                      </children>
                   </HBox>
-                  <HBox fx:id="RispondiTuttiButton" alignment="CENTER" prefHeight="70.0" prefWidth="169.0">
+                  <HBox fx:id="RispondiTuttiButton" alignment="CENTER" onMouseClicked="#rispondiATutti" prefHeight="70.0" prefWidth="169.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -159,7 +145,7 @@
                         </Label>
                      </children>
                   </HBox>
-                  <HBox fx:id="InoltreButton" alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                  <HBox fx:id="InoltreButton" alignment="CENTER" onMouseClicked="#inoltraMail" prefHeight="70.0" prefWidth="110.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>

@@ -33,6 +33,7 @@ public class ScriviEmailController {
     private Label EmailErroreLabel;
     @FXML
     private Label CampiErroreLabel;
+    private List<String> receivers;
 
     @FXML
     private void bottoneInviaEmail() throws IOException, ClassNotFoundException {
@@ -76,12 +77,27 @@ public class ScriviEmailController {
         outputStream.writeObject(new Messaggio(1, new Email(null, this.senderEmail, destinatari, Oggetto, Testo)));
     }
 
-    public void initParameter(Socket socket, String email, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
+    public void initParameter(Socket socket, String email, ObjectOutputStream outputStream, ObjectInputStream inputStream, List<String> receivers, String subject, String text) {
         this.socket = socket;
         this.senderEmail = email;
         this.outputStream = outputStream;
         this.inputStream = inputStream;
-        System.out.println("dentro initParameter ScriviEmailController");
+        this.receivers = receivers;
+        if(receivers != null){
+            if(receivers.size() < 2) {
+                ATextField.setText(receivers.get(0));
+            }
+            else{
+                String receiversText = receivers.get(0);
+                for(int i = 1; i < receivers.size(); i++){
+                    receiversText += ", " + receivers.get(i);
+                }
+                ATextField.setText(receiversText);
+            }
+        }else if(subject!=null && text!=null){
+            OggettoTextField.setText(subject);
+            TestoTextArea.setText(text);
+        }
     }
 
 }

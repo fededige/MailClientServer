@@ -154,7 +154,8 @@ class ThreadedServer implements Runnable {
                             String clientReq = (String) m.getContent();
                             System.out.println("clientReq: " + clientReq);
                             System.out.println(messaggioDaEliminare);
-                            outStream.writeObject(eliminaMail(clientReq, messaggioDaEliminare));
+                            eliminaMail(clientReq, messaggioDaEliminare);
+                            //outStream.writeObject(eliminaMail(clientReq, messaggioDaEliminare));
                             break;
                         case 4: //TODO: gracefull shutdown
                     }
@@ -171,7 +172,7 @@ class ThreadedServer implements Runnable {
         catch (IOException e) {e.printStackTrace();}
     }
 
-    private synchronized List<Email> eliminaMail(String client, Email email) throws IOException {
+    private synchronized void eliminaMail(String client, Email email) throws IOException {
         String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
         if(email.getSender().split("@")[0].equals(client)){
             casellePath += client + "/inviate/";
@@ -181,7 +182,6 @@ class ThreadedServer implements Runnable {
         casellePath += email.getId() + ".txt";
         Path path = Paths.get(casellePath);
         Files.delete(path);
-        return updateEmailList(client);
     }
 
     private synchronized void smistaEmail(Email emailcompleta) {

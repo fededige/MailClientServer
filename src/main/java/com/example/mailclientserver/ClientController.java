@@ -22,6 +22,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.channels.Pipe;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientController {
@@ -44,6 +45,8 @@ public class ClientController {
     private TextArea OggettoContent;
     @FXML
     private TextArea TextContent;
+    @FXML
+    private MenuButton sceltaInviateRicevute;
 
     @FXML
     public void initialize(String emailAddress) throws Exception {
@@ -52,6 +55,7 @@ public class ClientController {
         if(emailAddress != null){
             client = new Client(emailAddress);
             updateEmailList();
+            client.setInboxContent(client.inboxPropertyRicevute());
         }
         else{
             throw new Exception("Email non valida");
@@ -64,18 +68,28 @@ public class ClientController {
 
     private void updateEmailList() throws IOException, ClassNotFoundException {
         Messaggio m = new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]);
-        System.out.println("updateEmailList");
         (this.outputStream).writeObject(m);
-        System.out.println("updateEmailList dopo write");
-        List<Email> emailAddress = (List<Email>) inputStream.readObject(); //ignorare il warning
-        System.out.println("updateEmailList dopo read");
-        client.setInboxContent(emailAddress);
-        System.out.println("updateEmailList dopo");
+        List<Email> allEmails = (List<Email>) inputStream.readObject(); //ignorare il warning
+        List<Email> receivedEmails = new ArrayList<>();
+        List<Email> sentEmails = new ArrayList<>();
+        for(Email e : allEmails){
+            if (e.getSender().equals(client.emailAddressProperty().getValue())) {
+                sentEmails.add(e);
+            }else{
+                receivedEmails.add(e);
+            }
+        }
+        client.setInboxContentInviate(sentEmails);
+        client.setInboxContentRicevute(receivedEmails);
     }
 
 
     @FXML
     public void paginaScriviMail() {
+        scriviMail(null, null, null);
+    }
+
+    public void scriviMail(List<String> receivers, String subject, String text){
         final boolean[] campiPieni = {true};
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ScriviEmail.fxml"));
@@ -83,7 +97,7 @@ public class ClientController {
             newStage.setTitle("Scrivi mail");
             newStage.setScene(new Scene(fxmlLoader.load(), 700, 500));
             ScriviEmailController scriviEmailController = fxmlLoader.getController();
-            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outputStream, this.inputStream); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
+            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outputStream, this.inputStream, receivers, subject, text); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
             newStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
@@ -95,12 +109,7 @@ public class ClientController {
             if(campiPieni[0]){
                 System.out.println("paginaScriviMail");
                 List<Email> emailAddress = (List<Email>) inputStream.readObject(); //ignorare il warning
-                System.out.println(emailAddress.size());
-                for(Email e : emailAddress){
-                    System.out.println("ciao");
-                    System.out.println(e);
-                }
-                client.setInboxContent(emailAddress);
+                updateEmailList();
             }
         }
         catch (IOException e) {
@@ -167,10 +176,62 @@ public class ClientController {
             boolean response = (boolean) inputStream.readObject();
             if(response){
                 (this.outputStream).writeObject(new Messaggio(3, client.emailAddressProperty().getValue().split("@")[0]));
-                client.setInboxContent((List<Email>) inputStream.readObject());
+                //client.setInboxContent((List<Email>) inputStream.readObject());
+                aggiornaPagina();
             }
             this.emailSelezionata = null;
             updateDetailView();
         }
+    }
+
+    @FXML
+    public void rispondiMittente(){
+        if(this.emailSelezionata != null){
+            List<String> receiver = new ArrayList<>();
+            receiver.add(emailSelezionata.getSender());
+            scriviMail(receiver, null, null);
+        }
+    }
+
+    @FXML
+    public void rispondiATutti(){
+        if(this.emailSelezionata != null){
+            List<String> receivers = new ArrayList<>();
+            receivers.add(emailSelezionata.getSender());
+            for(String e: emailSelezionata.getReceivers()){
+                if(!(receivers.contains(e))){
+                    receivers.add(e);
+                }
+            }
+            scriviMail(receivers, null, null);
+        }
+    }
+
+    @FXML
+    public void inoltraMail(){
+        if(this.emailSelezionata != null){
+            scriviMail(null, emailSelezionata.getSubject(), emailSelezionata.getText());
+        }
+    }
+
+    @FXML
+    public void showRicevute(){
+        (this.sceltaInviateRicevute).setText("Ricevute");
+        client.setInboxContent(client.inboxPropertyRicevute());
+    }
+
+    @FXML
+    public void showInviate(){
+        (this.sceltaInviateRicevute).setText("Inviate");
+        client.setInboxContent(client.inboxPropertyInviate());
+    }
+
+    @FXML
+    public void aggiornaPagina() throws IOException, ClassNotFoundException {
+        updateEmailList();
+        if(this.sceltaInviateRicevute.getText().equals("Inviate"))
+            showInviate();
+        else
+            showRicevute();
     }
 }
