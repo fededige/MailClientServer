@@ -4,6 +4,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -110,31 +114,24 @@
                      </font>
                   </Label>
                   <Pane prefHeight="200.0" prefWidth="200.0" />
-                  <Label text="Tutte">
-                     <font>
-                        <Font size="20.0" />
-                     </font>
-                  </Label>
-                  <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../../../img/freccia-espandi.png" />
-                     </image>
-                     <HBox.margin>
-                        <Insets top="5.0" />
-                     </HBox.margin>
-                  </ImageView>
+                  <MenuButton fx:id="sceltaInviateRicevute" mnemonicParsing="false" text="Inviate">
+                    <items>
+                      <MenuItem mnemonicParsing="false" text="Iviate" />
+                      <MenuItem mnemonicParsing="false" text="Ricevute" />
+                    </items>
+                  </MenuButton>
                </children>
             </HBox>
-            <ListView fx:id="listEmail" prefHeight="590.0" prefWidth="468.0" />
+            <ListView fx:id="listEmail" onMouseClicked="#mostraMail" prefHeight="590.0" prefWidth="468.0" />
          </children>
       </VBox>
    </center>
    <right>
       <VBox prefHeight="700.0" prefWidth="689.0" BorderPane.alignment="CENTER">
          <children>
-            <HBox alignment="CENTER_RIGHT" prefHeight="70.0" prefWidth="200.0" spacing="15.0">
+            <HBox alignment="CENTER_RIGHT" prefHeight="70.0" prefWidth="650.0" spacing="15.0">
                <children>
-                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                  <HBox fx:id="RispondiButton" alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -148,7 +145,7 @@
                         </Label>
                      </children>
                   </HBox>
-                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="169.0">
+                  <HBox fx:id="RispondiTuttiButton" alignment="CENTER" prefHeight="70.0" prefWidth="169.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -162,7 +159,7 @@
                         </Label>
                      </children>
                   </HBox>
-                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                  <HBox fx:id="InoltreButton" alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -176,7 +173,7 @@
                         </Label>
                      </children>
                   </HBox>
-                  <HBox alignment="CENTER" prefHeight="70.0" prefWidth="110.0">
+                  <HBox fx:id="EliminaButtton" alignment="CENTER" onMouseClicked="#eliminaMail" prefHeight="70.0" prefWidth="110.0">
                      <children>
                         <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -195,6 +192,63 @@
                   <Insets left="20.0" right="20.0" />
                </VBox.margin>
             </HBox>
+            <VBox prefHeight="150.0" prefWidth="690.0">
+               <children>
+                  <HBox prefHeight="24.0" prefWidth="674.0" spacing="10.0">
+                     <children>
+                        <Label fx:id="DaLabel" text="Da:">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="DaContent">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <VBox.margin>
+                        <Insets left="15.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <HBox prefHeight="23.0" prefWidth="674.0" spacing="22.0">
+                     <children>
+                        <Label fx:id="ALabel" text="A:">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                        <TextField fx:id="AContent" editable="false" onMouseClicked="#mostraTuttiDest" prefHeight="26.0" prefWidth="615.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="15.0" right="15.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <VBox prefHeight="89.0" prefWidth="659.0">
+                     <children>
+                        <Label fx:id="OggettoLabel" text="Oggetto:">
+                           <font>
+                              <Font size="20.0" />
+                           </font>
+                        </Label>
+                        <TextArea fx:id="OggettoContent" editable="false" prefHeight="50.0" prefWidth="635.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets left="15.0" right="18.0" />
+                     </VBox.margin>
+                  </VBox>
+               </children>
+            </VBox>
+            <Separator prefWidth="200.0">
+               <VBox.margin>
+                  <Insets bottom="15.0" top="15.0" />
+               </VBox.margin>
+            </Separator>
+            <TextArea fx:id="TextContent" editable="false" prefHeight="479.0" prefWidth="690.0">
+               <VBox.margin>
+                  <Insets left="15.0" right="15.0" />
+               </VBox.margin>
+            </TextArea>
          </children>
       </VBox>
    </right>

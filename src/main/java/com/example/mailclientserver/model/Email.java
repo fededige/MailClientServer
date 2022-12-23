@@ -10,6 +10,7 @@ public class Email implements Serializable {
     private List<String> receivers;
     private String subject;
     private String text;
+    private String id;
 
     private Email() {}
 
@@ -23,7 +24,8 @@ public class Email implements Serializable {
      */
 
 
-    public Email(String sender, List<String> receivers, String subject, String text) {
+    public Email(String id, String sender, List<String> receivers, String subject, String text) {
+        this.id = id;
         this.sender = sender;
         this.subject = subject;
         this.text = text;
@@ -52,5 +54,13 @@ public class Email implements Serializable {
     @Override
     public String toString() {
         return "Da: " + this.sender + " - Ogg: " + this.subject;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

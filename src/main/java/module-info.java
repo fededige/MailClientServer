@@ -4,6 +4,7 @@ module com.example.mailclientserver {
 
     requires org.kordamp.bootstrapfx.core;
     requires com.google.gson;
+    requires org.json;
 
     opens com.example.mailclientserver to javafx.fxml;
     exports com.example.mailclientserver;

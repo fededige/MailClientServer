@@ -2,6 +2,8 @@ package com.example.mailclientserver;
 
 import com.example.mailclientserver.messaggio.Messaggio;
 import com.example.mailclientserver.model.Email;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -71,7 +73,7 @@ public class ScriviEmailController {
     }
 
     private void inviaEmail(List<String> destinatari, String Oggetto, String Testo) throws IOException {
-        outputStream.writeObject(new Messaggio(1, new Email(this.senderEmail, destinatari, Oggetto, Testo)));
+        outputStream.writeObject(new Messaggio(1, new Email(null, this.senderEmail, destinatari, Oggetto, Testo)));
     }
 
     public void initParameter(Socket socket, String email, ObjectOutputStream outputStream, ObjectInputStream inputStream) {

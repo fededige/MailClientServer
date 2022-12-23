@@ -145,7 +145,18 @@ class ThreadedServer implements Runnable {
                         case 2:
                             String client = (String) m.getContent();
                             outStream.writeObject(updateEmailList(client));
-                        case 3: //TODO: gracefull shutdown
+                            break;
+                        case 3:
+                            Email messaggioDaEliminare = (Email) m.getContent();
+                            if(messaggioDaEliminare != null)
+                                outStream.writeObject(true);
+                            m = (Messaggio)inStream.readObject();
+                            String clientReq = (String) m.getContent();
+                            System.out.println("clientReq: " + clientReq);
+                            System.out.println(messaggioDaEliminare);
+                            outStream.writeObject(eliminaMail(clientReq, messaggioDaEliminare));
+                            break;
+                        case 4: //TODO: gracefull shutdown
                     }
                 }
                 System.out.println("fuori dal while");
@@ -160,11 +171,26 @@ class ThreadedServer implements Runnable {
         catch (IOException e) {e.printStackTrace();}
     }
 
+    private synchronized List<Email> eliminaMail(String client, Email email) throws IOException {
+        String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
+        if(email.getSender().split("@")[0].equals(client)){
+            casellePath += client + "/inviate/";
+        }else{
+            casellePath += client + "/ricevute/";
+        }
+        casellePath += email.getId() + ".txt";
+        Path path = Paths.get(casellePath);
+        Files.delete(path);
+        return updateEmailList(client);
+    }
+
     private synchronized void smistaEmail(Email emailcompleta) {
         String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
         try {
             String[] tempo = (java.time.LocalDateTime.now().toString().substring(0, 24)).split(":");
-            Path newFilePath = Paths.get(casellePath + (emailcompleta.getSender()).split("@")[0] + "/inviate/" + tempo[0] + "_" + tempo[1] + "_" + tempo[2] + ".txt");
+            String tempTagliato = tempo[0] + "_" + tempo[1] + "_" + tempo[2];
+            emailcompleta.setId(tempTagliato);
+            Path newFilePath = Paths.get(casellePath + (emailcompleta.getSender()).split("@")[0] + "/inviate/" + tempTagliato + ".txt");
             Gson gson = new Gson();
             Files.write(newFilePath, gson.toJson(emailcompleta).getBytes());
             for(String receiver : emailcompleta.getReceivers()){
