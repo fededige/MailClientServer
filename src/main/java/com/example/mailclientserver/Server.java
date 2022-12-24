@@ -144,7 +144,7 @@ class ThreadedServer implements Runnable {
                             break;
                         case 2:
                             String client = (String) m.getContent();
-                            outStream.writeObject(updateEmailList(client));
+                            outStream.writeObject(updateEmailListSent(client));
                             break;
                         case 3:
                             Email messaggioDaEliminare = (Email) m.getContent();
@@ -152,12 +152,20 @@ class ThreadedServer implements Runnable {
                                 outStream.writeObject(true);
                             m = (Messaggio)inStream.readObject();
                             String clientReq = (String) m.getContent();
-                            System.out.println("clientReq: " + clientReq);
-                            System.out.println(messaggioDaEliminare);
-                            eliminaMail(clientReq, messaggioDaEliminare);
-                            //outStream.writeObject(eliminaMail(clientReq, messaggioDaEliminare));
+                            if(clientReq != null)
+                                outStream.writeObject(true);
+                            m = (Messaggio)inStream.readObject();
+                            String casella = (String) m.getContent();
+                            eliminaMail(clientReq, messaggioDaEliminare, casella);
                             break;
-                        case 4: //TODO: gracefull shutdown
+                        case 4:
+                            outStream.writeObject(this.clientEmails);
+                            break;
+                        case 5:
+                            client = (String) m.getContent();
+                            outStream.writeObject(updateEmailListReceived(client));
+                            break;
+                        case 6: //TODO: gracefull shutdown
                     }
                 }
                 System.out.println("fuori dal while");
@@ -172,13 +180,9 @@ class ThreadedServer implements Runnable {
         catch (IOException e) {e.printStackTrace();}
     }
 
-    private synchronized void eliminaMail(String client, Email email) throws IOException {
+    private synchronized void eliminaMail(String client, Email email, String casella) throws IOException {
         String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
-        if(email.getSender().split("@")[0].equals(client)){
-            casellePath += client + "/inviate/";
-        }else{
-            casellePath += client + "/ricevute/";
-        }
+        casellePath += client + "/" + casella + "/";
         casellePath += email.getId() + ".txt";
         Path path = Paths.get(casellePath);
         Files.delete(path);
@@ -212,29 +216,65 @@ class ThreadedServer implements Runnable {
     }
 
 
-    private synchronized List<Email> updateEmailList(String client) {
+    private synchronized List<Email> updateEmailListSent(String client) {
         List<Email> emails = new ArrayList<>();
         String casellaPath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/" + client;
-        for(int i = 0; i < 2; i++){
-            File file = new File(casellaPath + (i == 0 ? "/inviate" : "/ricevute"));
-            String[] emailPaths = file.list();
-            List<String> emailPathsList = new ArrayList<>();
-            if(emailPaths != null){
-                emailPathsList = Arrays.asList(emailPaths);
-            }
-            for(String name : emailPathsList){
-                Path path = Paths.get(casellaPath + (i == 0 ? "/inviate" : "/ricevute") + "/" + name);
-                System.out.println(path);
-                try{
-                    List<String> contents = Files.readAllLines(path);
-                    Email email = new Gson().fromJson(contents.get(0), Email.class);
-                    emails.add(email);
-                }catch(IOException e){
-                    System.out.println("Errore in updateEmailList: readAllLines");
-                    e.printStackTrace();
-                }
+        File file = new File(casellaPath + "/inviate");
+        String[] emailPaths = file.list();
+        List<String> emailPathsList = new ArrayList<>();
+        if(emailPaths != null){
+            emailPathsList = Arrays.asList(emailPaths);
+        }
+        for(String name : emailPathsList){
+            Path path = Paths.get(casellaPath + "/inviate" + "/" + name);
+            try{
+                List<String> contents = Files.readAllLines(path);
+                Email email = new Gson().fromJson(contents.get(0), Email.class);
+                emails.add(email);
+            }catch(IOException e){
+                System.out.println("Errore in updateEmailList: readAllLines");
+                e.printStackTrace();
             }
         }
+        System.out.println("STAMPA EMAIL INVIATE");
+        for(Email es : emails){
+            System.out.println(es.getSender());
+            for(String s : es.getReceivers()){
+                System.out.println("\t" + s);
+            }
+        }
+        System.out.println("FINE EMAIL INVIATE");
+        return emails;
+    }
+
+    private synchronized List<Email> updateEmailListReceived(String client) {
+        List<Email> emails = new ArrayList<>();
+        String casellaPath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/" + client;
+        File file = new File(casellaPath + "/ricevute");
+        String[] emailPaths = file.list();
+        List<String> emailPathsList = new ArrayList<>();
+        if(emailPaths != null){
+            emailPathsList = Arrays.asList(emailPaths);
+        }
+        for(String name : emailPathsList){
+            Path path = Paths.get(casellaPath + "/ricevute" + "/" + name);
+            try{
+                List<String> contents = Files.readAllLines(path);
+                Email email = new Gson().fromJson(contents.get(0), Email.class);
+                emails.add(email);
+            }catch(IOException e){
+                System.out.println("Errore in updateEmailList: readAllLines");
+                e.printStackTrace();
+            }
+        }
+        System.out.println("STAMPA EMAIL RICEVUTE");
+        for(Email es : emails){
+            System.out.println(es.getSender());
+            for(String s : es.getReceivers()){
+                System.out.println("\t" + s);
+            }
+        }
+        System.out.println("FINE EMAIL RICEVUTE");
         return emails;
     }
 

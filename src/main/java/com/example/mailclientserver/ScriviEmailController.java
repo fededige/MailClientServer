@@ -4,10 +4,9 @@ import com.example.mailclientserver.messaggio.Messaggio;
 import com.example.mailclientserver.model.Email;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -33,8 +32,10 @@ public class ScriviEmailController {
     private Label EmailErroreLabel;
     @FXML
     private Label CampiErroreLabel;
+    @FXML
+    private MenuButton listaClientDropDown;
+    private List<String> clientList;
     private List<String> receivers;
-
     @FXML
     private void bottoneInviaEmail() throws IOException, ClassNotFoundException {
         if (Objects.equals(ATextField.getText(), "") || Objects.equals(TestoTextArea.getText(), "")){
@@ -62,27 +63,28 @@ public class ScriviEmailController {
                 EmailErroreLabel.setText("Email non valida");
             }else{
                 inviaEmail(listaDestinatari,OggettoTextField.getText(),TestoTextArea.getText());
-                updateEmail();
                 Stage stage = (Stage) EmailErroreLabel.getScene().getWindow();
                 stage.close();
             }
         }
     }
 
-    private void updateEmail() throws IOException {
-        outputStream.writeObject(new Messaggio(2, this.senderEmail.split("@")[0]));
-    }
+//    private void updateEmail() throws IOException {
+//        outputStream.writeObject(new Messaggio(2, this.senderEmail.split("@")[0]));
+//    }
 
     private void inviaEmail(List<String> destinatari, String Oggetto, String Testo) throws IOException {
         outputStream.writeObject(new Messaggio(1, new Email(null, this.senderEmail, destinatari, Oggetto, Testo)));
     }
 
-    public void initParameter(Socket socket, String email, ObjectOutputStream outputStream, ObjectInputStream inputStream, List<String> receivers, String subject, String text) {
+    public void initParameter(Socket socket, String email, ObjectOutputStream outputStream, ObjectInputStream inputStream, List<String> receivers, String subject, String text,List<String> clientList) {
         this.socket = socket;
         this.senderEmail = email;
         this.outputStream = outputStream;
         this.inputStream = inputStream;
         this.receivers = receivers;
+        this.clientList = clientList;
+        caricaMenuButton();
         if(receivers != null){
             if(receivers.size() < 2) {
                 ATextField.setText(receivers.get(0));
@@ -98,6 +100,19 @@ public class ScriviEmailController {
             OggettoTextField.setText(subject);
             TestoTextArea.setText(text);
         }
+    }
+
+    private void caricaMenuButton() {
+        for(String s : clientList){
+            MenuItem m = new MenuItem(s);
+            m.setOnAction((event) -> changeSceneOnBtnClick(
+                    event, m.getText()));
+            (this.listaClientDropDown).getItems().add(m);
+        }
+    }
+
+    private void changeSceneOnBtnClick(ActionEvent event, String s) {
+        this.ATextField.setText(ATextField.getText().isEmpty() ? s : ATextField.getText() + ", " + s);
     }
 
 }

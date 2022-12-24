@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.nio.channels.Pipe;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +30,7 @@ public class ClientController {
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
     private Email emailSelezionata;
+    private List<String> clientList;
     @FXML
     private Label emailAddressLabel;
     @FXML
@@ -48,6 +48,7 @@ public class ClientController {
     @FXML
     private MenuButton sceltaInviateRicevute;
 
+
     @FXML
     public void initialize(String emailAddress) throws Exception {
         if (this.client != null)
@@ -55,6 +56,7 @@ public class ClientController {
         if(emailAddress != null){
             client = new Client(emailAddress);
             updateEmailList();
+            updateClientList();
             client.setInboxContent(client.inboxPropertyRicevute());
         }
         else{
@@ -66,21 +68,16 @@ public class ClientController {
         listEmail.itemsProperty().bind(client.inboxProperty());
     }
 
+    private void updateClientList() throws IOException, ClassNotFoundException {
+        (this.outputStream).writeObject(new Messaggio(4, null));
+        this.clientList = (List<String>) inputStream.readObject();
+    }
+
     private void updateEmailList() throws IOException, ClassNotFoundException {
-        Messaggio m = new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]);
-        (this.outputStream).writeObject(m);
-        List<Email> allEmails = (List<Email>) inputStream.readObject(); //ignorare il warning
-        List<Email> receivedEmails = new ArrayList<>();
-        List<Email> sentEmails = new ArrayList<>();
-        for(Email e : allEmails){
-            if (e.getSender().equals(client.emailAddressProperty().getValue())) {
-                sentEmails.add(e);
-            }else{
-                receivedEmails.add(e);
-            }
-        }
-        client.setInboxContentInviate(sentEmails);
-        client.setInboxContentRicevute(receivedEmails);
+        (this.outputStream).writeObject(new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]));
+        client.setInboxContentInviate((List<Email>) inputStream.readObject());
+        (this.outputStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
+        client.setInboxContentRicevute((List<Email>) inputStream.readObject());
     }
 
 
@@ -97,7 +94,7 @@ public class ClientController {
             newStage.setTitle("Scrivi mail");
             newStage.setScene(new Scene(fxmlLoader.load(), 700, 500));
             ScriviEmailController scriviEmailController = fxmlLoader.getController();
-            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outputStream, this.inputStream, receivers, subject, text); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
+            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outputStream, this.inputStream, receivers, subject, text, this.clientList); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
             newStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
@@ -108,8 +105,7 @@ public class ClientController {
             newStage.showAndWait();
             if(campiPieni[0]){
                 System.out.println("paginaScriviMail");
-                List<Email> emailAddress = (List<Email>) inputStream.readObject(); //ignorare il warning
-                updateEmailList();
+                aggiornaPagina();
             }
         }
         catch (IOException e) {
@@ -176,7 +172,10 @@ public class ClientController {
             boolean response = (boolean) inputStream.readObject();
             if(response){
                 (this.outputStream).writeObject(new Messaggio(3, client.emailAddressProperty().getValue().split("@")[0]));
-                //client.setInboxContent((List<Email>) inputStream.readObject());
+            }
+            response = (boolean) inputStream.readObject();
+            if(response){
+                (this.outputStream).writeObject(new Messaggio(3, (this.sceltaInviateRicevute).getText()));
                 aggiornaPagina();
             }
             this.emailSelezionata = null;
