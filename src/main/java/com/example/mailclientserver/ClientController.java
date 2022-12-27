@@ -23,6 +23,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class ClientController {
     private Socket socket;
@@ -62,6 +66,12 @@ public class ClientController {
         else{
             throw new Exception("Email non valida");
         }
+        ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+            exec.scheduleAtFixedRate(new Update(),
+                30,
+                30,
+                TimeUnit.SECONDS
+        );
         emailSelezionata = null;
         emailAddressLabel.textProperty().bind(client.emailAddressProperty());
         counterEmails.textProperty().bind(client.getEmailsCount().asString());
@@ -232,5 +242,15 @@ public class ClientController {
             showInviate();
         else
             showRicevute();
+    }
+
+    private class Update implements Runnable{
+        public void run() {
+            try {
+                aggiornaPagina();
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
