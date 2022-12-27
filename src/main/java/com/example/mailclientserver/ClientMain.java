@@ -45,7 +45,7 @@ public class ClientMain extends Application {
         outStream.writeObject(new Messaggio(0, emailAddress));
         emailAddress = (String)inStream.readObject();
         System.out.println(emailAddress);
-        if(!(emailAddress.equals("Email non valida"))){
+        if(!(emailAddress.equals("Client inesistente"))){
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ClientView.fxml"));
             stage.setTitle("Mail");
             stage.setScene(new Scene(fxmlLoader.load(), 1280, 700));

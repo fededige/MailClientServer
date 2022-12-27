@@ -29,3 +29,9 @@
 .send_button{
     -fx-border-color: #A5A5A5;
 }
+
+.console-area{
+    -fx-border-color: #A5A5A5;
+    -fx-border-width: 3
+;
+}

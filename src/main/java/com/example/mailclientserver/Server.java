@@ -12,11 +12,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
 import com.google.gson.Gson;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class Server {
     private static ServerSocket serverSocket;
@@ -25,6 +31,8 @@ public class Server {
     static ExecutorService exec = null;
     boolean flag = false;
     private static List<String> clientsEmail = new ArrayList<>();
+    private ListProperty<StringProperty> consoleLog;
+    private static ObservableList<StringProperty> consoleLogContent;
 
     public void listen(int port) {
         try {
@@ -34,9 +42,10 @@ public class Server {
             flag = true;
             while (flag && i < 20){//out passata al task collegata all'in unico per tutti
                 socket = serverSocket.accept();
-                Runnable task = new ThreadedServer(socket, i, clientsEmail);
+                ThreadedServer t = new ThreadedServer(socket, i, clientsEmail);
+                consoleLogContent.add(t.getAction());
                 i++;
-                exec.execute(task);
+                exec.execute(t);
             }
             exec.shutdown();
         } catch (IOException e) {
@@ -90,21 +99,33 @@ public class Server {
         return subDirectoriesList.contains("inviate") && subDirectoriesList.contains("ricevute");
     }
 
+    public ListProperty<StringProperty> ConsoleLogProperty(){
+        return this.consoleLog;
+    }
 
-    public static void main(String[] args) throws IOException {
+
+    public Server() throws IOException {
+        consoleLogContent = FXCollections.observableList(new LinkedList<>());
+        consoleLog = new SimpleListProperty<>();
+        consoleLog.set(consoleLogContent);
         updateClients();
         checkFolders();
         exec = Executors.newFixedThreadPool(NUM_THREAD);
         System.out.println("Sono il server");
-        Server server = new Server();
-        server.listen(4445);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                //avvisiamo tutti i thread del threadpool di fare la close
-                serverSocket.close();
-                System.out.println("The server is shut down!");
-            } catch (IOException e) { /* failed */ }
-        }));
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                listen(4445);
+            }
+        });
+        t1.start();
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            try {
+//                //avvisiamo tutti i thread del threadpool di fare la close
+//                serverSocket.close();
+//                System.out.println("The server is shut down!");
+//            } catch (IOException e) { /* failed */ }
+//        }));
     }
 
 }
@@ -113,8 +134,10 @@ class ThreadedServer implements Runnable {
     private Socket incoming;
     private int name;
     private List<String> clientEmails;
+    private StringProperty action;
 
     public ThreadedServer(Socket incoming, int name, List<String> clientEmails) {
+        this.action = new SimpleStringProperty("connessione avvenuta");
         System.out.println("connesione avvenuta");
         this.incoming = incoming;
         this.name = name;
@@ -130,21 +153,32 @@ class ThreadedServer implements Runnable {
                 ObjectOutputStream outStream = new ObjectOutputStream(incoming.getOutputStream());
                 //System.out.println("dopo out");
                 Messaggio m = null;
-                while((m = (Messaggio)inStream.readObject()) != null){
+                boolean flag = true;
+                while(flag && (m = (Messaggio)inStream.readObject()) != null){
                     System.out.println(m.getCod());
                     switch (m.getCod()){
                         case 0:
                             String emailAddr = (String) m.getContent();
-                            System.out.println(emailAddr);
-                            outStream.writeObject(checkEmail(emailAddr));
+                            String messaggio = "controllo di : " + emailAddr;
+                            emailAddr = checkEmail(emailAddr);
+                            outStream.writeObject(emailAddr);
+                            action.setValue(this.name + "> " + messaggio + (emailAddr.equals("Client inesistente") ? ": Cliente inesistente" : ": Client esistente"));
                             break;
                         case 1:
                             Email emailcompleta = (Email) m.getContent();
+                            messaggio = "";
+                            for(String e : emailcompleta.getReceivers()){
+                                messaggio += e + ", ";
+                            }
+                            if(messaggio != null)
+                                messaggio = messaggio.substring(0, messaggio.length() - 2);
                             smistaEmail(emailcompleta);
+                            action.setValue(this.name + "> " + "invio mail a: " + messaggio);
                             break;
                         case 2:
                             String client = (String) m.getContent();
                             outStream.writeObject(updateEmailListSent(client));
+                            action.setValue(this.name + "> " + "aggiornamento email inviate");
                             break;
                         case 3:
                             Email messaggioDaEliminare = (Email) m.getContent();
@@ -157,20 +191,27 @@ class ThreadedServer implements Runnable {
                             m = (Messaggio)inStream.readObject();
                             String casella = (String) m.getContent();
                             eliminaMail(clientReq, messaggioDaEliminare, casella);
+                            action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
                             break;
                         case 4:
-                            outStream.writeObject(this.clientEmails);
+                            outStream.writeObject(this.clientEmails); //serve per il menu a tendina
+                            action.setValue(this.name + "> "+ "caricamento utenti totali");
                             break;
                         case 5:
                             client = (String) m.getContent();
                             outStream.writeObject(updateEmailListReceived(client));
+                            action.setValue(this.name + "> " + "aggiornamento email ricevute");
                             break;
-                        case 6: //TODO: gracefull shutdown
+                        case 6:
+                            System.out.println("case 6");
+                            action.setValue(this.name + "> " + "chiusura socket");
+                            incoming.close();
+                            flag = false;
+                            break;
                     }
                 }
                 System.out.println("fuori dal while");
-                Thread.sleep(15000);
-            } catch (InterruptedException | ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             } finally {
                 incoming.close();
@@ -278,4 +319,15 @@ class ThreadedServer implements Runnable {
         return emails;
     }
 
+    public StringProperty getAction() {
+        return action;
+    }
+
+    public StringProperty actionProperty() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action.set(action);
+    }
 }

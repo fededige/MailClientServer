@@ -13,7 +13,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -26,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ClientController {
@@ -58,6 +56,15 @@ public class ClientController {
 
     @FXML
     public void initialize(String emailAddress) throws Exception {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                System.out.println("shutdown");
+                (this.outputStream).writeObject(new Messaggio(6, null));
+                socket.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
         if (this.client != null)
             throw new IllegalStateException("Model can only be initialized once");
         if(emailAddress != null){
@@ -72,8 +79,8 @@ public class ClientController {
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
             exec.scheduleAtFixedRate(
                 new Update(),
-                10, //temp
-                10,
+                30, //temp
+                30,
                 TimeUnit.SECONDS
         );
         emailSelezionata = null;
@@ -162,7 +169,6 @@ public class ClientController {
     }
 
     public void initParam(Socket socket, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
-        System.out.println("initParam");
         this.socket = socket;
         this.outputStream = outputStream;
         this.inputStream = inputStream;
