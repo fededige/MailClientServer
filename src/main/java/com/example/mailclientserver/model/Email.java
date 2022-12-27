@@ -11,6 +11,7 @@ public class Email implements Serializable {
     private String subject;
     private String text;
     private String id;
+    private String date;
 
     private Email() {}
 
@@ -30,6 +31,9 @@ public class Email implements Serializable {
         this.subject = subject;
         this.text = text;
         this.receivers = new ArrayList<>(receivers);
+        if(id != null) {
+            this.date = id.split("T")[0];
+        }
     }
 
     public String getSender() {
@@ -62,5 +66,13 @@ public class Email implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
     }
 }

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class ScriviEmailController {
     private Socket socket;
@@ -38,6 +39,8 @@ public class ScriviEmailController {
     private List<String> receivers;
     @FXML
     private void bottoneInviaEmail() throws IOException, ClassNotFoundException {
+        CampiErroreLabel.setText("");
+        EmailErroreLabel.setText("");
         if (Objects.equals(ATextField.getText(), "") || Objects.equals(TestoTextArea.getText(), "")){
             CampiErroreLabel.setText("Campi vuoti");
         }
@@ -50,21 +53,30 @@ public class ScriviEmailController {
                     listaDestinatari.add(temp);
             }
             boolean isValid = true;
+            boolean exist = true;
             for(String d: listaDestinatari) {
-                (this.outputStream).writeObject(new Messaggio(0, d));
-                String emailAddress = (String) inputStream.readObject();
-                System.out.println(emailAddress);
-                if (emailAddress.equals("Email non valida")) {
+                if(!checkEmail(d)){
                     isValid = false;
                     break;
                 }
+                (this.outputStream).writeObject(new Messaggio(0, d));
+                String emailAddress = (String) inputStream.readObject();
+                System.out.println(emailAddress);
+                if (emailAddress.equals("Client inesistente")) {
+                    exist = false;
+                    break;
+                }
             }
-            if(!isValid){
-                EmailErroreLabel.setText("Email non valida");
-            }else{
+            if(isValid && exist){
+                System.out.println("ciao");
                 inviaEmail(listaDestinatari,OggettoTextField.getText(),TestoTextArea.getText());
                 Stage stage = (Stage) EmailErroreLabel.getScene().getWindow();
                 stage.close();
+            }else if(!isValid){
+                EmailErroreLabel.setText("Email non valida");
+            }
+            else{
+                EmailErroreLabel.setText("Email inesistente");
             }
         }
     }
@@ -115,4 +127,8 @@ public class ScriviEmailController {
         this.ATextField.setText(ATextField.getText().isEmpty() ? s : ATextField.getText() + ", " + s);
     }
 
+    private boolean checkEmail(String emailAddress) {
+        String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+        return Pattern.compile(regexPattern).matcher(emailAddress).matches();
+    }
 }

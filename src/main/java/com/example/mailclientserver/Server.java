@@ -194,6 +194,7 @@ class ThreadedServer implements Runnable {
             String[] tempo = (java.time.LocalDateTime.now().toString().substring(0, 24)).split(":");
             String tempTagliato = tempo[0] + "_" + tempo[1] + "_" + tempo[2];
             emailcompleta.setId(tempTagliato);
+            emailcompleta.setDate(tempTagliato.split("T")[0]);
             Path newFilePath = Paths.get(casellePath + (emailcompleta.getSender()).split("@")[0] + "/inviate/" + tempTagliato + ".txt");
             Gson gson = new Gson();
             Files.write(newFilePath, gson.toJson(emailcompleta).getBytes());
@@ -211,8 +212,7 @@ class ThreadedServer implements Runnable {
 
 
     private String checkEmail(String emailAddress) {
-        String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-        return Pattern.compile(regexPattern).matcher(emailAddress).matches() && clientEmails.contains(emailAddress) ? emailAddress : "Email non valida";
+        return clientEmails.contains(emailAddress) ? emailAddress : "Client inesistente";
     }
 
 

@@ -5,6 +5,7 @@ import com.example.mailclientserver.model.Client;
 import com.example.mailclientserver.model.Email;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import javafx.application.Platform;
 import org.json.JSONObject;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -51,6 +52,8 @@ public class ClientController {
     private TextArea TextContent;
     @FXML
     private MenuButton sceltaInviateRicevute;
+    @FXML
+    private Label dataEmailLabel;
 
 
     @FXML
@@ -67,9 +70,10 @@ public class ClientController {
             throw new Exception("Email non valida");
         }
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-            exec.scheduleAtFixedRate(new Update(),
-                30,
-                30,
+            exec.scheduleAtFixedRate(
+                new Update(),
+                10, //temp
+                10,
                 TimeUnit.SECONDS
         );
         emailSelezionata = null;
@@ -88,6 +92,14 @@ public class ClientController {
         client.setInboxContentInviate((List<Email>) inputStream.readObject());
         (this.outputStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
         client.setInboxContentRicevute((List<Email>) inputStream.readObject());
+    }
+
+    private void showDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Nuovo Messaggio");
+        alert.setHeaderText(null);
+        alert.setContentText("Hai un nuovo Messaggio!");
+        alert.showAndWait();
     }
 
 
@@ -136,12 +148,16 @@ public class ClientController {
             AContent.setText(emailSelezionata.getReceivers().toString().replace("[", " ").replace("]", " ").trim());
             OggettoContent.setText(emailSelezionata.getSubject());
             TextContent.setText(emailSelezionata.getText());
+            System.out.println(emailSelezionata.getId());
+            System.out.println(emailSelezionata.getDate());
+            dataEmailLabel.setText(emailSelezionata.getDate());
         }
         else{
             DaContent.setText("");
             AContent.setText("");
             OggettoContent.setText("");
             TextContent.setText("");
+            dataEmailLabel.setText("");
         }
     }
 
@@ -237,20 +253,25 @@ public class ClientController {
 
     @FXML
     public void aggiornaPagina() throws IOException, ClassNotFoundException {
+        int oldCount = client.inboxPropertyRicevute().size();
         updateEmailList();
         if(this.sceltaInviateRicevute.getText().equals("Inviate"))
             showInviate();
         else
             showRicevute();
+        if(client.inboxPropertyRicevute().size() > oldCount)
+            showDialog();
     }
 
     private class Update implements Runnable{
         public void run() {
-            try {
-                aggiornaPagina();
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            Platform.runLater(()-> {
+                try {
+                    aggiornaPagina();
+                } catch (IOException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
     }
 }

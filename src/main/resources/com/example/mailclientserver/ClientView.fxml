@@ -178,6 +178,15 @@
                   <Insets left="20.0" right="20.0" />
                </VBox.margin>
             </HBox>
+            <HBox alignment="TOP_RIGHT" prefHeight="34.0" prefWidth="690.0">
+               <children>
+                  <Label fx:id="dataEmailLabel">
+                     <HBox.margin>
+                        <Insets right="10.0" />
+                     </HBox.margin>
+                  </Label>
+               </children>
+            </HBox>
             <VBox prefHeight="150.0" prefWidth="690.0">
                <children>
                   <HBox prefHeight="24.0" prefWidth="674.0" spacing="10.0">
