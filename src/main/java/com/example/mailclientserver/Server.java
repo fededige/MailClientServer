@@ -44,7 +44,7 @@ public class Server {
             System.out.println("in attesa di connesioni");
             int i = 0;
             flag = true;
-            while (flag && i < 20){//out passata al task collegata all'in unico per tutti
+            while (flag){//out passata al task collegata all'in unico per tutti
                 socket = serverSocket.accept();
                 ThreadedServer t = new ThreadedServer(socket, i, clientsEmail);
                 consoleLogContent.add(t.getAction());
@@ -79,9 +79,9 @@ public class Server {
     private static void updateClients() throws IOException{
         Path inputFilePath = Paths.get("D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/clients_emails.txt");
         try(BufferedReader fileInputReader = Files.newBufferedReader(inputFilePath, StandardCharsets.UTF_8)){
-            String line = null;
+            String line;
             while((line = fileInputReader.readLine()) != null){
-                (clientsEmail).add(line.trim()); //.split("@")[0] forse
+                (clientsEmail).add(line.trim());
             }
         }
     }
@@ -218,7 +218,9 @@ class ThreadedServer implements Runnable {
                     }
                 }
                 System.out.println("fuori dal while");
-            } catch (ClassNotFoundException e) {
+            } catch (SocketException se){
+                System.out.println("socket closed");
+            }catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             } finally {
                 incoming.close();

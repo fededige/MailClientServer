@@ -21,16 +21,28 @@
    <left>
       <VBox prefHeight="700.0" prefWidth="231.0" spacing="20.0" styleClass="primary-color" stylesheets="@styles.css" BorderPane.alignment="CENTER">
          <children>
-            <Label prefHeight="40.0" prefWidth="114.0" text="Mail" textFill="WHITE">
-               <font>
-                  <Font size="18.0" />
-               </font>
-               <VBox.margin>
-                  <Insets left="10.0" top="10.0" />
-               </VBox.margin>
-            </Label>
             <VBox prefHeight="506.0" prefWidth="300.0">
                <children>
+                  <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <Label prefHeight="40.0" prefWidth="36.0" text="Mail" textFill="WHITE">
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                        </Label>
+                        <Pane prefHeight="100.0" prefWidth="92.0" />
+                        <ImageView fx:id="pallinoStato" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../../../img/pallino_connesso.png" />
+                           </image>
+                        </ImageView>
+                        <Label fx:id="labelStato" text="Online" textFill="WHITE">
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
                   <HBox fx:id="buttonNuovaEmail" alignment="CENTER_LEFT" onMouseClicked="#paginaScriviMail" prefHeight="61.0" prefWidth="300.0" spacing="10.0" styleClass="selected" stylesheets="@styles.css">
                      <children>
                         <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">

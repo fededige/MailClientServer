@@ -3,16 +3,15 @@ package com.example.mailclientserver;
 import com.example.mailclientserver.messaggio.Messaggio;
 import com.example.mailclientserver.model.Client;
 import com.example.mailclientserver.model.Email;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import javafx.application.Platform;
-import org.json.JSONObject;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -21,6 +20,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -34,6 +34,9 @@ public class ClientController {
     private ObjectInputStream inputStream;
     private Email emailSelezionata;
     private List<String> clientList;
+    private String ip;
+    private int port;
+    private boolean connessi;
     @FXML
     private Label emailAddressLabel;
     @FXML
@@ -52,8 +55,47 @@ public class ClientController {
     private MenuButton sceltaInviateRicevute;
     @FXML
     private Label dataEmailLabel;
+    @FXML
+    private Label labelStato;
+    @FXML
+    private ImageView pallinoStato;
 
 
+    public void riconnessioneSocket(){
+        if(connessi){
+            connessi = false;
+            labelStato.setText("Offline");
+            Image image = new Image("D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/resources/img/pallino_disconnesso.png");
+            pallinoStato.setImage(image);
+            System.out.println("prima disconnessione");
+            Thread t1 = new Thread(() -> {
+                while(true) {
+                    try {
+                        socket = new Socket(this.ip, this.port);
+                        this.outputStream = new ObjectOutputStream(socket.getOutputStream());
+                        this.inputStream = new ObjectInputStream(socket.getInputStream());
+                        connessi = true;
+                        Platform.runLater(()-> {
+                            labelStato.setText("Online");
+                            Image im = new Image("D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/resources/img/pallino_connesso.png");
+                            pallinoStato.setImage(im);
+                        });
+                        break;
+                    } catch(IOException e) {
+                        System.out.println("Reconnect failed, retrying");
+                        try {
+                            Thread.sleep(5 * 1000);
+                        } catch(InterruptedException ie) {
+                            System.out.println("Interrupted");
+                        }
+                    }
+                }
+            });
+            t1.start();
+        }
+        else
+            System.out.println("altre disconnessioni non provo a riconnettermi");
+    }
     @FXML
     public void initialize(Stage stage, String emailAddress) throws Exception {
         stage.setOnCloseRequest(t -> {
@@ -61,7 +103,11 @@ public class ClientController {
             try {
                 (this.outputStream).writeObject(new Messaggio(6, null));
                 socket.close();
-            } catch (IOException e) {
+            } catch (SocketException se){
+                System.out.println("socket chiuso");
+                riconnessioneSocket();
+            }
+            catch (IOException e) {
                 throw new RuntimeException(e);
             }
             Platform.exit();
@@ -81,8 +127,8 @@ public class ClientController {
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
             exec.scheduleAtFixedRate(
                 new Update(),
-                30, //temp
-                30,
+                    15, //temp
+                15,
                 TimeUnit.SECONDS
         );
         emailSelezionata = null;
@@ -91,16 +137,31 @@ public class ClientController {
         listEmail.itemsProperty().bind(client.inboxProperty());
     }
 
-    private void updateClientList() throws IOException, ClassNotFoundException {
-        (this.outputStream).writeObject(new Messaggio(4, null));
-        this.clientList = (List<String>) inputStream.readObject();
+    private void updateClientList() {
+        try {
+            (this.outputStream).writeObject(new Messaggio(4, null));
+            this.clientList = (List<String>) inputStream.readObject();
+        } catch (SocketException se){
+            System.out.println("socket chiuso");
+            riconnessioneSocket();
+        }catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void updateEmailList() throws IOException, ClassNotFoundException {
-        (this.outputStream).writeObject(new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]));
-        client.setInboxContentInviate((List<Email>) inputStream.readObject());
-        (this.outputStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
-        client.setInboxContentRicevute((List<Email>) inputStream.readObject());
+    private void updateEmailList() throws ClassNotFoundException {
+        try {
+            (this.outputStream).writeObject(new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]));
+            client.setInboxContentInviate((List<Email>) inputStream.readObject());
+            (this.outputStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
+            client.setInboxContentRicevute((List<Email>) inputStream.readObject());
+        } catch (SocketException se){
+            System.out.println("socket chiuso updateEmailList");
+            riconnessioneSocket();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     private void showDialog() {
@@ -135,13 +196,9 @@ public class ClientController {
             newStage.initModality(Modality.APPLICATION_MODAL);
             newStage.showAndWait();
             if(campiPieni[0]){
-                System.out.println("paginaScriviMail");
                 aggiornaPagina();
             }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -170,10 +227,13 @@ public class ClientController {
         }
     }
 
-    public void initParam(Socket socket, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
+    public void initParam(Socket socket, ObjectOutputStream outputStream, ObjectInputStream inputStream, String ip, int port) {
         this.socket = socket;
         this.outputStream = outputStream;
         this.inputStream = inputStream;
+        this.port = port;
+        this.ip = ip;
+        this.connessi = true;
     }
 
     @FXML
@@ -200,20 +260,29 @@ public class ClientController {
     }
 
     @FXML
-    public void eliminaMail() throws IOException, ClassNotFoundException {
-        if(this.emailSelezionata != null){
-            (this.outputStream).writeObject(new Messaggio(3, this.emailSelezionata));
-            boolean response = (boolean) inputStream.readObject();
-            if(response){
-                (this.outputStream).writeObject(new Messaggio(3, client.emailAddressProperty().getValue().split("@")[0]));
+    public void eliminaMail() throws ClassNotFoundException {
+        try{
+            if (this.emailSelezionata != null) {
+                (this.outputStream).writeObject(new Messaggio(3, this.emailSelezionata));
+                boolean response = (boolean) inputStream.readObject();
+                if (response) {
+                    (this.outputStream).writeObject(new Messaggio(3, client.emailAddressProperty().getValue().split("@")[0]));
+                }
+                response = (boolean) inputStream.readObject();
+                if (response) {
+                    (this.outputStream).writeObject(new Messaggio(3, (this.sceltaInviateRicevute).getText()));
+                    aggiornaPagina();
+                }
+                this.emailSelezionata = null;
+                updateDetailView();
             }
-            response = (boolean) inputStream.readObject();
-            if(response){
-                (this.outputStream).writeObject(new Messaggio(3, (this.sceltaInviateRicevute).getText()));
-                aggiornaPagina();
-            }
-            this.emailSelezionata = null;
-            updateDetailView();
+        }
+        catch (SocketException se){
+            System.out.println("socket chiuso");
+            riconnessioneSocket();
+        }
+        catch (IOException e){
+            throw new RuntimeException(e);
         }
     }
 
@@ -260,7 +329,7 @@ public class ClientController {
     }
 
     @FXML
-    public void aggiornaPagina() throws IOException, ClassNotFoundException {
+    public void aggiornaPagina() throws ClassNotFoundException {
         int oldCount = client.inboxPropertyRicevute().size();
         updateEmailList();
         if(this.sceltaInviateRicevute.getText().equals("Inviate"))
@@ -276,7 +345,7 @@ public class ClientController {
             Platform.runLater(()-> {
                 try {
                     aggiornaPagina();
-                } catch (IOException | ClassNotFoundException e) {
+                } catch (ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
             });

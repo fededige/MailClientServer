@@ -52,7 +52,7 @@ public class ClientMain extends Application {
             stage.show();
             ClientController clientController = fxmlLoader.getController();
             System.out.println(clientController);
-            clientController.initParam(socket, outStream, inStream);
+            clientController.initParam(socket, outStream, inStream, "127.0.0.1", 4445);
             clientController.initialize(stage, emailAddress);
         }
     }
