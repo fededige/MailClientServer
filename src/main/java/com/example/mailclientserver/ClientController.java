@@ -55,16 +55,18 @@ public class ClientController {
 
 
     @FXML
-    public void initialize(String emailAddress) throws Exception {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+    public void initialize(Stage stage, String emailAddress) throws Exception {
+        stage.setOnCloseRequest(t -> {
+            System.out.println("shutdown");
             try {
-                System.out.println("shutdown");
                 (this.outputStream).writeObject(new Messaggio(6, null));
                 socket.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }));
+            Platform.exit();
+            System.exit(0);
+        });
         if (this.client != null)
             throw new IllegalStateException("Model can only be initialized once");
         if(emailAddress != null){

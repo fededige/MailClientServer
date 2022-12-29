@@ -6,11 +6,11 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.mailclientserver.ServeController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.mailclientserver.ServerController">
    <top>
       <HBox prefHeight="26.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
-            <RadioButton fx:id="statoServer" mnemonicParsing="false" text="On/Off">
+            <RadioButton fx:id="statoServer" mnemonicParsing="false" onMouseClicked="#avviaServer" text="On/Off">
                <HBox.margin>
                   <Insets left="10.0" top="10.0" />
                </HBox.margin>

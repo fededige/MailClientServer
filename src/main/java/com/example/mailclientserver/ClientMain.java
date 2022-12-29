@@ -21,7 +21,7 @@ public class ClientMain extends Application {
             } catch(IOException e) {
                 System.out.println("Reconnect failed, wait");
                 try {
-                    Thread.sleep(30*1000);
+                    Thread.sleep(10*1000);
                 } catch(InterruptedException ie) {
                     System.out.println("Interrupted");
                 }
@@ -53,7 +53,7 @@ public class ClientMain extends Application {
             ClientController clientController = fxmlLoader.getController();
             System.out.println(clientController);
             clientController.initParam(socket, outStream, inStream);
-            clientController.initialize(emailAddress);
+            clientController.initialize(stage, emailAddress);
         }
     }
 

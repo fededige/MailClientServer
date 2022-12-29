@@ -6,6 +6,7 @@ import com.example.mailclientserver.model.Email;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,6 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import com.google.gson.Gson;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
@@ -34,8 +37,9 @@ public class Server {
     private ListProperty<StringProperty> consoleLog;
     private static ObservableList<StringProperty> consoleLogContent;
 
-    public void listen(int port) {
+    public void listen(int port) throws IOException {
         try {
+            System.out.println("dentro listen");
             serverSocket = new ServerSocket(port);
             System.out.println("in attesa di connesioni");
             int i = 0;
@@ -48,8 +52,10 @@ public class Server {
                 exec.execute(t);
             }
             exec.shutdown();
+        }catch(SocketException se){
+            this.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } finally {
             if (socket!=null) {
                 try {
@@ -58,6 +64,15 @@ public class Server {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    public void close() throws IOException {
+        if(!serverSocket.isClosed()) {
+            serverSocket.close();
+        }
+        if(!exec.isShutdown()) {
+            exec.shutdown();
         }
     }
 
@@ -112,22 +127,15 @@ public class Server {
         checkFolders();
         exec = Executors.newFixedThreadPool(NUM_THREAD);
         System.out.println("Sono il server");
-        Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
+        Thread t1 = new Thread(() -> {
+            try {
                 listen(4445);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         });
         t1.start();
-//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            try {
-//                //avvisiamo tutti i thread del threadpool di fare la close
-//                serverSocket.close();
-//                System.out.println("The server is shut down!");
-//            } catch (IOException e) { /* failed */ }
-//        }));
     }
-
 }
 
 class ThreadedServer implements Runnable {
@@ -170,8 +178,7 @@ class ThreadedServer implements Runnable {
                             for(String e : emailcompleta.getReceivers()){
                                 messaggio += e + ", ";
                             }
-                            if(messaggio != null)
-                                messaggio = messaggio.substring(0, messaggio.length() - 2);
+                            messaggio = messaggio.substring(0, messaggio.length() - 2);
                             smistaEmail(emailcompleta);
                             action.setValue(this.name + "> " + "invio mail a: " + messaggio);
                             break;
