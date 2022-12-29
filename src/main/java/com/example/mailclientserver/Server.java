@@ -17,7 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gson.Gson;
 import javafx.beans.property.ListProperty;
@@ -36,6 +38,7 @@ public class Server {
     private static List<String> clientsEmail = new ArrayList<>();
     private ListProperty<StringProperty> consoleLog;
     private static ObservableList<StringProperty> consoleLogContent;
+    private Lock lock;
 
     public void listen(int port) throws IOException {
         try {
@@ -46,7 +49,7 @@ public class Server {
             flag = true;
             while (flag){//out passata al task collegata all'in unico per tutti
                 socket = serverSocket.accept();
-                ThreadedServer t = new ThreadedServer(socket, i, clientsEmail);
+                ThreadedServer t = new ThreadedServer(socket, i, clientsEmail, this.lock);
                 consoleLogContent.add(t.getAction());
                 i++;
                 exec.execute(t);
@@ -69,9 +72,11 @@ public class Server {
 
     public void close() throws IOException {
         if(!serverSocket.isClosed()) {
+            System.out.println("serveSocket close");
             serverSocket.close();
         }
         if(!exec.isShutdown()) {
+            System.out.println("exec close");
             exec.shutdown();
         }
     }
@@ -120,9 +125,11 @@ public class Server {
 
 
     public Server() throws IOException {
+        this.lock = new ReentrantLock();
+
         consoleLogContent = FXCollections.observableList(new LinkedList<>());
-        consoleLog = new SimpleListProperty<>();
-        consoleLog.set(consoleLogContent);
+        this.consoleLog = new SimpleListProperty<>();
+        this.consoleLog.set(consoleLogContent);
         updateClients();
         checkFolders();
         exec = Executors.newFixedThreadPool(NUM_THREAD);
@@ -143,13 +150,16 @@ class ThreadedServer implements Runnable {
     private int name;
     private List<String> clientEmails;
     private StringProperty action;
+    private Lock lock;
 
-    public ThreadedServer(Socket incoming, int name, List<String> clientEmails) {
+
+    public ThreadedServer(Socket incoming, int name, List<String> clientEmails, Lock lock) {
         this.action = new SimpleStringProperty("connessione avvenuta");
         System.out.println("connesione avvenuta");
         this.incoming = incoming;
         this.name = name;
         this.clientEmails = clientEmails;
+        this.lock = lock;
     }
 
     public void run() {
@@ -197,8 +207,10 @@ class ThreadedServer implements Runnable {
                                 outStream.writeObject(true);
                             m = (Messaggio)inStream.readObject();
                             String casella = (String) m.getContent();
-                            eliminaMail(clientReq, messaggioDaEliminare, casella);
-                            action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
+                            if(messaggioDaEliminare != null) {
+                                eliminaMail(clientReq, messaggioDaEliminare, casella);
+                                action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
+                            }
                             break;
                         case 4:
                             outStream.writeObject(this.clientEmails); //serve per il menu a tendina
@@ -220,7 +232,7 @@ class ThreadedServer implements Runnable {
                 System.out.println("fuori dal while");
             } catch (SocketException se){
                 System.out.println("socket closed");
-            }catch (ClassNotFoundException e) {
+            }catch (ClassNotFoundException | InterruptedException e) {
                 throw new RuntimeException(e);
             } finally {
                 incoming.close();
@@ -238,7 +250,10 @@ class ThreadedServer implements Runnable {
         Files.delete(path);
     }
 
-    private synchronized void smistaEmail(Email emailcompleta) {
+    private synchronized void smistaEmail(Email emailcompleta) throws InterruptedException {
+        System.out.println("dentro smistaEmail");
+        this.lock.lock();
+        System.out.println("dentro smistaEmail dopo lock");
         String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
         try {
             String[] tempo = (java.time.LocalDateTime.now().toString().substring(0, 24)).split(":");
@@ -257,6 +272,9 @@ class ThreadedServer implements Runnable {
         }
         catch (IOException e) {
             System.out.println("Errore in smistaEmail: createFile");
+        } finally {
+            this.lock.unlock();
+            System.out.println("dopo unlock smistaEmail");
         }
     }
 
@@ -330,13 +348,5 @@ class ThreadedServer implements Runnable {
 
     public StringProperty getAction() {
         return action;
-    }
-
-    public StringProperty actionProperty() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action.set(action);
     }
 }

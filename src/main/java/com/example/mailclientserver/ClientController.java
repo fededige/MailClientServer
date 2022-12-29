@@ -127,8 +127,8 @@ public class ClientController {
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
             exec.scheduleAtFixedRate(
                 new Update(),
-                    15, //temp
-                15,
+                    30, //temp
+                30,
                 TimeUnit.SECONDS
         );
         emailSelezionata = null;

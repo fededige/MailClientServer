@@ -1,5 +1,6 @@
 package com.example.mailclientserver;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.StringProperty;
@@ -29,7 +30,7 @@ public class ServerController {
             consoleLog = s.ConsoleLogProperty();
             consoleLog.addListener((InvalidationListener) change -> {
                 for(StringProperty c : consoleLog){
-                    c.addListener((observableValue) -> consoleTextArea.appendText(c.getValue() + "\n"));
+                    c.addListener((observableValue) -> Platform.runLater(()-> consoleTextArea.appendText(c.getValue() + "\n")));
                 }
             });
         }else{
