@@ -35,7 +35,7 @@ public class ServerController {
             });
         }else{
             if(this.s != null){
-                consoleLog = null;
+                consoleLog = null; //controllare se ha senso
                 this.s.close();
             }
         }

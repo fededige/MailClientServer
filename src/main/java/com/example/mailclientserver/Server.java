@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -40,7 +40,7 @@ public class Server {
     private static ObservableList<StringProperty> consoleLogContent;
     private Lock lock;
 
-    public void listen(int port) throws IOException {
+    public void listen(int port) throws IOException, InterruptedException {
         try {
             System.out.println("dentro listen");
             serverSocket = new ServerSocket(port);
@@ -55,8 +55,7 @@ public class Server {
                 exec.execute(t);
             }
             exec.shutdown();
-        }catch(SocketException se){
-            this.close();
+        }catch(SocketException ignored){
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
@@ -70,15 +69,22 @@ public class Server {
         }
     }
 
-    public void close() throws IOException {
+    public void close() throws IOException, InterruptedException {
+        System.out.println("close");
+        System.out.println(Thread.currentThread().getName());
         if(!serverSocket.isClosed()) {
             System.out.println("serveSocket close");
             serverSocket.close();
         }
-        if(!exec.isShutdown()) {
-            System.out.println("exec close");
-            exec.shutdown();
+        exec.shutdown();
+        if (!exec.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+            System.out.println("after 100 millisecs");
+            exec.shutdownNow();
         }
+        if(exec.isShutdown())
+            System.out.println("isShutdown");
+        if(exec.isTerminated())
+            System.out.println("isTerminated");
     }
 
     private static void updateClients() throws IOException{
@@ -137,7 +143,7 @@ public class Server {
         Thread t1 = new Thread(() -> {
             try {
                 listen(4445);
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -235,8 +241,12 @@ class ThreadedServer implements Runnable {
             }catch (ClassNotFoundException | InterruptedException e) {
                 throw new RuntimeException(e);
             } finally {
+                if(incoming.isClosed()) {
+                    System.out.println("già chiuso");
+                }
                 incoming.close();
-                System.out.println("chiusura avvenuta");
+                System.out.println("chiusura avvenuta " + Thread.currentThread().getName());
+                Thread.currentThread().interrupt();
             }
         }
         catch (IOException e) {e.printStackTrace();}
@@ -304,14 +314,6 @@ class ThreadedServer implements Runnable {
                 e.printStackTrace();
             }
         }
-        System.out.println("STAMPA EMAIL INVIATE");
-        for(Email es : emails){
-            System.out.println(es.getSender());
-            for(String s : es.getReceivers()){
-                System.out.println("\t" + s);
-            }
-        }
-        System.out.println("FINE EMAIL INVIATE");
         return emails;
     }
 
@@ -335,14 +337,6 @@ class ThreadedServer implements Runnable {
                 e.printStackTrace();
             }
         }
-        System.out.println("STAMPA EMAIL RICEVUTE");
-        for(Email es : emails){
-            System.out.println(es.getSender());
-            for(String s : es.getReceivers()){
-                System.out.println("\t" + s);
-            }
-        }
-        System.out.println("FINE EMAIL RICEVUTE");
         return emails;
     }
 
