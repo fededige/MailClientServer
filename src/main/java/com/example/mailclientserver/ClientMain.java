@@ -8,7 +8,6 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ClientMain extends Application {
@@ -35,9 +34,7 @@ public class ClientMain extends Application {
         System.out.println("connesso");
 
         ObjectOutputStream outStream = new ObjectOutputStream(socket.getOutputStream());
-        //System.out.println("dopo out");
         ObjectInputStream inStream = new ObjectInputStream(socket.getInputStream());
-        //System.out.println("dopo in");
 
         System.out.println("inserisci mail");
         Scanner in = new Scanner(System.in);

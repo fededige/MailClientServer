@@ -12,32 +12,36 @@ import java.io.IOException;
 
 public class ServerController {
     private ListProperty<StringProperty> consoleLog;
-    private Server s = null;
+    private Server server;
 
     @FXML
     private TextArea consoleTextArea;
     @FXML
     private RadioButton statoServer;
-//    @FXML
-//    public void initialize() throws IOException {
-//
-//    }
+
     @FXML
     public void avviaServer() throws IOException, InterruptedException {
         if(statoServer.isSelected()){
-             this.s = new Server();
-            System.out.println("ciao");
-            consoleLog = s.ConsoleLogProperty();
-            consoleLog.addListener((InvalidationListener) change -> {
-                for(StringProperty c : consoleLog){
-                    c.addListener((observableValue) -> Platform.runLater(()-> consoleTextArea.appendText(c.getValue() + "\n")));
-                }
-            });
+            Thread thread;
+            this.server = new Server();
+            thread = new Thread(server);
+            thread.setDaemon(true);
+            thread.setName("Thread_del_Server");
+            thread.start();
+            consoleListener();
         }else{
-            if(this.s != null){
-                consoleLog = null; //controllare se ha senso
-                this.s.close();
+            if(this.server != null){
+                this.server.stop();
             }
         }
+    }
+
+    private void consoleListener() {
+        consoleLog = server.ConsoleLogProperty();
+        consoleLog.addListener((InvalidationListener) change -> {
+            for(StringProperty c : consoleLog){
+                c.addListener((observableValue) -> Platform.runLater(()-> consoleTextArea.appendText(c.getValue() + "\n")));
+            }
+        });
     }
 }

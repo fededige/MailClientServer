@@ -29,62 +29,116 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class Server {
+public class Server implements Runnable{
     private static ServerSocket serverSocket;
     private Socket socket = null;
     static int NUM_THREAD = 5;
     static ExecutorService exec = null;
-    boolean flag = false;
+    boolean flag = true;
     private static List<String> clientsEmail = new ArrayList<>();
     private ListProperty<StringProperty> consoleLog;
     private static ObservableList<StringProperty> consoleLogContent;
     private Lock lock;
 
-    public void listen(int port) throws IOException, InterruptedException {
+    public void run(){
+        System.out.println("Run: " + Thread.currentThread().getName());
         try {
             System.out.println("dentro listen");
-            serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(4445);
             System.out.println("in attesa di connesioni");
             int i = 0;
-            flag = true;
             while (flag){//out passata al task collegata all'in unico per tutti
-                socket = serverSocket.accept();
-                ThreadedServer t = new ThreadedServer(socket, i, clientsEmail, this.lock);
-                consoleLogContent.add(t.getAction());
-                i++;
-                exec.execute(t);
-            }
-            exec.shutdown();
-        }catch(SocketException ignored){
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (socket!=null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                System.out.println("dentro il while");
+                try{
+                    ThreadedServer t = new ThreadedServer(serverSocket.accept(), i, clientsEmail, this.lock);
+                    consoleLogContent.add(t.getAction());
+                    i++;
+                    exec.execute(t);
+                }catch(SocketException e) {
+                    System.out.println("SocketException, closing ServerSocket...");
                 }
             }
+            System.out.println("Server is stopped");
+        }catch (IOException e) {
+            exec.shutdown();
+            e.printStackTrace();
         }
     }
 
-    public void close() throws IOException, InterruptedException {
-        System.out.println("close");
-        System.out.println(Thread.currentThread().getName());
-        if(!serverSocket.isClosed()) {
-            System.out.println("serveSocket close");
-            serverSocket.close();
-        }
+//    public void listen(int port) throws IOException, InterruptedException {
+//        System.out.println("Listen: " + Thread.currentThread().getName());
+//        try {
+//            System.out.println("dentro listen");
+//            serverSocket = new ServerSocket(port);
+//            System.out.println("in attesa di connesioni");
+//            int i = 0;
+//            while (flag){//out passata al task collegata all'in unico per tutti
+//                System.out.println("dentro il while");
+//                try{
+//                    ThreadedServer t = new ThreadedServer(serverSocket.accept(), i, clientsEmail, this.lock);
+//                    consoleLogContent.add(t.getAction());
+//                    i++;
+//                    exec.execute(t);
+//                }catch(SocketException e) {
+//                    System.out.println("SocketException, closing ServerSocket...");
+//                }
+//            }
+//            System.out.println("Server is stopped");
+//        }catch (IOException e) {
+//            exec.shutdown();
+//            e.printStackTrace();
+//        }
+//    }
+
+//    public void close(){
+//        System.out.println("Close: " + Thread.currentThread().getName());
+//        exec.shutdown();
+//        this.flag = false;
+//        try{
+//            serverSocket.close();
+//        }catch(IOException e){
+//            e.printStackTrace();
+//        }
+//        try{
+//            System.out.println("sto chiudendo il pool");
+//            if(!exec.awaitTermination(3, TimeUnit.SECONDS)){
+//                System.out.println("thread name: " + Thread.currentThread().getName());
+//                exec.shutdownNow();
+//                if(!exec.awaitTermination(3, TimeUnit.SECONDS)){
+//                    System.out.println("non ho chiuso il pool");
+//                }
+//            }
+//        }catch (InterruptedException e){
+//            System.out.println("InterruptedException");
+//            exec.shutdownNow();
+//            Thread.currentThread().interrupt();
+//        }
+//    }
+
+    public void stop() {
+        System.out.println("Close: " + Thread.currentThread().getName());
         exec.shutdown();
-        if (!exec.awaitTermination(100, TimeUnit.MILLISECONDS)) {
-            System.out.println("after 100 millisecs");
-            exec.shutdownNow();
+        flag = false;
+
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        if(exec.isShutdown())
-            System.out.println("isShutdown");
-        if(exec.isTerminated())
-            System.out.println("isTerminated");
+
+        try {
+            System.out.println("chiudo pool...");
+            if (!exec.awaitTermination(1, TimeUnit.SECONDS)) {
+                System.out.println("shutdownNow");
+                exec.shutdownNow();
+                if (!exec.awaitTermination(0, TimeUnit.SECONDS))
+                    System.err.println("pool non terminato");
+            }
+        } catch (InterruptedException ie) {
+            exec.shutdownNow();
+            //TODO vedi qui
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void updateClients() throws IOException{
@@ -138,16 +192,20 @@ public class Server {
         this.consoleLog.set(consoleLogContent);
         updateClients();
         checkFolders();
-        exec = Executors.newFixedThreadPool(NUM_THREAD);
-        System.out.println("Sono il server");
-        Thread t1 = new Thread(() -> {
-            try {
-                listen(4445);
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        exec = Executors.newFixedThreadPool(NUM_THREAD, r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
         });
-        t1.start();
+        System.out.println("Sono il server");
+//        Thread t1 = new Thread(() -> {
+//            try {
+//                listen(4445);
+//            } catch (IOException | InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+//        t1.start();
     }
 }
 
@@ -170,17 +228,19 @@ class ThreadedServer implements Runnable {
 
     public void run() {
         try {
+            ObjectOutputStream outStream = null;
+            ObjectInputStream inStream = null;
             try {
                 System.out.println("RUN connesione avvenuta:" + " " + Thread.currentThread().getName());
-                ObjectInputStream inStream = new ObjectInputStream(incoming.getInputStream());
+                inStream = new ObjectInputStream(incoming.getInputStream());
                 //System.out.println("dopo in");
-                ObjectOutputStream outStream = new ObjectOutputStream(incoming.getOutputStream());
+                outStream = new ObjectOutputStream(incoming.getOutputStream());
                 //System.out.println("dopo out");
                 Messaggio m = null;
                 boolean flag = true;
-                while(flag && (m = (Messaggio)inStream.readObject()) != null){
+                while (flag && (m = (Messaggio) inStream.readObject()) != null && !Thread.currentThread().isInterrupted()) {
                     System.out.println(m.getCod());
-                    switch (m.getCod()){
+                    switch (m.getCod()) {
                         case 0:
                             String emailAddr = (String) m.getContent();
                             String messaggio = "controllo di : " + emailAddr;
@@ -191,7 +251,7 @@ class ThreadedServer implements Runnable {
                         case 1:
                             Email emailcompleta = (Email) m.getContent();
                             messaggio = "";
-                            for(String e : emailcompleta.getReceivers()){
+                            for (String e : emailcompleta.getReceivers()) {
                                 messaggio += e + ", ";
                             }
                             messaggio = messaggio.substring(0, messaggio.length() - 2);
@@ -205,22 +265,22 @@ class ThreadedServer implements Runnable {
                             break;
                         case 3:
                             Email messaggioDaEliminare = (Email) m.getContent();
-                            if(messaggioDaEliminare != null)
+                            if (messaggioDaEliminare != null)
                                 outStream.writeObject(true);
-                            m = (Messaggio)inStream.readObject();
+                            m = (Messaggio) inStream.readObject();
                             String clientReq = (String) m.getContent();
-                            if(clientReq != null)
+                            if (clientReq != null)
                                 outStream.writeObject(true);
-                            m = (Messaggio)inStream.readObject();
+                            m = (Messaggio) inStream.readObject();
                             String casella = (String) m.getContent();
-                            if(messaggioDaEliminare != null) {
+                            if (messaggioDaEliminare != null) {
                                 eliminaMail(clientReq, messaggioDaEliminare, casella);
                                 action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
                             }
                             break;
                         case 4:
                             outStream.writeObject(this.clientEmails); //serve per il menu a tendina
-                            action.setValue(this.name + "> "+ "caricamento utenti totali");
+                            action.setValue(this.name + "> " + "caricamento utenti totali");
                             break;
                         case 5:
                             client = (String) m.getContent();
@@ -236,20 +296,31 @@ class ThreadedServer implements Runnable {
                     }
                 }
                 System.out.println("fuori dal while");
-            } catch (SocketException se){
+            } catch (SocketException se) {
                 System.out.println("socket closed");
-            }catch (ClassNotFoundException | InterruptedException e) {
+            } catch (ClassNotFoundException | InterruptedException e) {
                 throw new RuntimeException(e);
             } finally {
-                if(incoming.isClosed()) {
+                System.out.println("finally threaded server");
+                if(outStream != null) {
+                    System.out.println("outStream not closed");
+                    outStream.close();
+                }
+                if(inStream != null) {
+                    System.out.println("inStream not closed");
+                    inStream.close();
+                }
+                if (!incoming.isClosed()) {
+                    incoming.close();
+                }else{
                     System.out.println("già chiuso");
                 }
-                incoming.close();
                 System.out.println("chiusura avvenuta " + Thread.currentThread().getName());
-                Thread.currentThread().interrupt();
             }
         }
-        catch (IOException e) {e.printStackTrace();}
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private synchronized void eliminaMail(String client, Email email, String casella) throws IOException {

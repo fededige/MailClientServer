@@ -62,6 +62,18 @@ public class ClientController {
 
 
     public void riconnessioneSocket(){
+        try{
+            if(outputStream != null)
+                outputStream.close();
+            if(inputStream != null)
+                inputStream.close();
+            if(!socket.isClosed()) {
+                System.out.println("Closing socket");
+                this.socket.close();
+            }
+        } catch (IOException e){
+            System.out.println("Errore socket.close in riconnessioneSocket");
+        }
         if(connessi){
             connessi = false;
             labelStato.setText("Offline");
@@ -71,7 +83,7 @@ public class ClientController {
             Thread t1 = new Thread(() -> {
                 while(true) {
                     try {
-                        socket = new Socket(this.ip, this.port);
+                        this.socket = new Socket(this.ip, this.port);
                         this.outputStream = new ObjectOutputStream(socket.getOutputStream());
                         this.inputStream = new ObjectInputStream(socket.getInputStream());
                         connessi = true;
@@ -155,11 +167,9 @@ public class ClientController {
             client.setInboxContentInviate((List<Email>) inputStream.readObject());
             (this.outputStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
             client.setInboxContentRicevute((List<Email>) inputStream.readObject());
-        } catch (SocketException se){
+        } catch (IOException e){
             System.out.println("socket chiuso updateEmailList");
             riconnessioneSocket();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
     }
