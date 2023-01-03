@@ -1,8 +1,13 @@
-package com.example.mailclientserver.model;
+package com.example.mailclientserver;
 
+
+import com.example.mailclientserver.model.Email;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.IntegerBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -28,8 +33,6 @@ public class Client {
         this.inboxRicevute = new SimpleListProperty<>();
         this.inboxRicevute.set(inboxContentRicevute);
 
-
-        /*****************************************************/
         this.inboxContent = FXCollections.observableList(new LinkedList<>());
         this.inbox = new SimpleListProperty<>();
         this.inbox.set(inboxContent);
@@ -51,10 +54,6 @@ public class Client {
 
     public StringProperty emailAddressProperty() {
         return emailAddress;
-    }
-
-    public void deleteEmail(Email email) { //come mai non è mai usato?
-        inboxContent.remove(email);
     }
 
     public void setInboxContent(List<Email> emails) {

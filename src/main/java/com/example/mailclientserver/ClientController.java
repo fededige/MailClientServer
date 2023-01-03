@@ -1,7 +1,6 @@
 package com.example.mailclientserver;
 
 import com.example.mailclientserver.messaggio.Messaggio;
-import com.example.mailclientserver.model.Client;
 import com.example.mailclientserver.model.Email;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -28,15 +27,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ClientController {
-    private Socket socket;
     private Client client;
-    private ObjectOutputStream outputStream;
-    private ObjectInputStream inputStream;
+    private Socket socket;
+    private ObjectOutputStream outStream;
+    private ObjectInputStream inStream;
+    private String ip = "127.0.0.1";
+    private int port = 4445;
     private Email emailSelezionata;
     private List<String> clientList;
-    private String ip;
-    private int port;
-    private boolean connessi;
+    private boolean connessi = true;
+
     @FXML
     private Label emailAddressLabel;
     @FXML
@@ -60,13 +60,12 @@ public class ClientController {
     @FXML
     private ImageView pallinoStato;
 
-
     public void riconnessioneSocket(){
         try{
-            if(outputStream != null)
-                outputStream.close();
-            if(inputStream != null)
-                inputStream.close();
+            if(outStream != null)
+                outStream.close();
+            if(inStream != null)
+                inStream.close();
             if(!socket.isClosed()) {
                 System.out.println("Closing socket");
                 this.socket.close();
@@ -84,8 +83,8 @@ public class ClientController {
                 while(true) {
                     try {
                         this.socket = new Socket(this.ip, this.port);
-                        this.outputStream = new ObjectOutputStream(socket.getOutputStream());
-                        this.inputStream = new ObjectInputStream(socket.getInputStream());
+                        this.outStream = new ObjectOutputStream(socket.getOutputStream());
+                        this.inStream = new ObjectInputStream(socket.getInputStream());
                         connessi = true;
                         Platform.runLater(()-> {
                             labelStato.setText("Online");
@@ -108,12 +107,43 @@ public class ClientController {
         else
             System.out.println("altre disconnessioni non provo a riconnettermi");
     }
-    @FXML
-    public void initialize(Stage stage, String emailAddress) throws Exception {
+
+    public void openConnection(){
+        while(true) {
+            try {
+                socket = new Socket(ip, port);
+                break;
+            } catch(IOException e) {
+                System.out.println("Reconnect failed, wait");
+                try {
+                    Thread.sleep(10*1000);
+                } catch(InterruptedException ie) {
+                    System.out.println("Interrupted");
+                }
+            }
+        }
+        System.out.println("Client connesso");
+    }
+
+    public void init(String emailAddress, Stage stage) throws IOException, ClassNotFoundException {
+        openConnection();
+        openStreams();
+
+        if(client != null)
+            throw new IllegalStateException("Model can only be initialized once");
+
+        outStream.writeObject(new Messaggio(0, emailAddress));
+        if(!inStream.readObject().equals("Cliente inesistente")){
+            client = new Client(emailAddress);
+            updateEmailList();
+            updateClientList();
+            client.setInboxContent(client.inboxPropertyRicevute());
+        }
+
         stage.setOnCloseRequest(t -> {
             System.out.println("shutdown");
             try {
-                (this.outputStream).writeObject(new Messaggio(6, null));
+                (outStream).writeObject(new Messaggio(6, null));
                 socket.close();
             } catch (SocketException se){
                 System.out.println("socket chiuso");
@@ -125,21 +155,11 @@ public class ClientController {
             Platform.exit();
             System.exit(0);
         });
-        if (this.client != null)
-            throw new IllegalStateException("Model can only be initialized once");
-        if(emailAddress != null){
-            client = new Client(emailAddress);
-            updateEmailList();
-            updateClientList();
-            client.setInboxContent(client.inboxPropertyRicevute());
-        }
-        else{
-            throw new Exception("Email non valida");
-        }
+
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-            exec.scheduleAtFixedRate(
+        exec.scheduleAtFixedRate(
                 new Update(),
-                    30, //temp
+                30, //temp
                 30,
                 TimeUnit.SECONDS
         );
@@ -149,10 +169,19 @@ public class ClientController {
         listEmail.itemsProperty().bind(client.inboxProperty());
     }
 
+    private void openStreams() {
+        try {
+            outStream = new ObjectOutputStream(socket.getOutputStream());
+            inStream = new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void updateClientList() {
         try {
-            (this.outputStream).writeObject(new Messaggio(4, null));
-            this.clientList = (List<String>) inputStream.readObject();
+            (this.outStream).writeObject(new Messaggio(4, null));
+            this.clientList = (List<String>) inStream.readObject();
         } catch (SocketException se){
             System.out.println("socket chiuso");
             riconnessioneSocket();
@@ -163,15 +192,14 @@ public class ClientController {
 
     private void updateEmailList() throws ClassNotFoundException {
         try {
-            (this.outputStream).writeObject(new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]));
-            client.setInboxContentInviate((List<Email>) inputStream.readObject());
-            (this.outputStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
-            client.setInboxContentRicevute((List<Email>) inputStream.readObject());
+            (this.outStream).writeObject(new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]));
+            client.setInboxContentInviate((List<Email>) inStream.readObject());
+            (this.outStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
+            client.setInboxContentRicevute((List<Email>) inStream.readObject());
         } catch (IOException e){
             System.out.println("socket chiuso updateEmailList");
             riconnessioneSocket();
         }
-
     }
 
     private void showDialog() {
@@ -181,7 +209,6 @@ public class ClientController {
         alert.setContentText("Hai un nuovo Messaggio!");
         alert.showAndWait();
     }
-
 
     @FXML
     public void paginaScriviMail() {
@@ -196,7 +223,7 @@ public class ClientController {
             newStage.setTitle("Scrivi mail");
             newStage.setScene(new Scene(fxmlLoader.load(), 700, 500));
             ScriviEmailController scriviEmailController = fxmlLoader.getController();
-            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outputStream, this.inputStream, receivers, subject, text, this.clientList); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
+            scriviEmailController.initParameter(socket, client.emailAddressProperty().getValue(), this.outStream, this.inStream, receivers, subject, text, this.clientList); //magari fare iterfaccia Controller con tutti i metodi in comune e necessari
             newStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
@@ -237,15 +264,6 @@ public class ClientController {
         }
     }
 
-    public void initParam(Socket socket, ObjectOutputStream outputStream, ObjectInputStream inputStream, String ip, int port) {
-        this.socket = socket;
-        this.outputStream = outputStream;
-        this.inputStream = inputStream;
-        this.port = port;
-        this.ip = ip;
-        this.connessi = true;
-    }
-
     @FXML
     public void mostraTuttiDest(){
         Stage stage = (Stage) AContent.getScene().getWindow();
@@ -273,14 +291,14 @@ public class ClientController {
     public void eliminaMail() throws ClassNotFoundException {
         try{
             if (this.emailSelezionata != null) {
-                (this.outputStream).writeObject(new Messaggio(3, this.emailSelezionata));
-                boolean response = (boolean) inputStream.readObject();
+                (this.outStream).writeObject(new Messaggio(3, this.emailSelezionata));
+                boolean response = (boolean) inStream.readObject();
                 if (response) {
-                    (this.outputStream).writeObject(new Messaggio(3, client.emailAddressProperty().getValue().split("@")[0]));
+                    (this.outStream).writeObject(new Messaggio(3, client.emailAddressProperty().getValue().split("@")[0]));
                 }
-                response = (boolean) inputStream.readObject();
+                response = (boolean) inStream.readObject();
                 if (response) {
-                    (this.outputStream).writeObject(new Messaggio(3, (this.sceltaInviateRicevute).getText()));
+                    (this.outStream).writeObject(new Messaggio(3, (this.sceltaInviateRicevute).getText()));
                     aggiornaPagina();
                 }
                 this.emailSelezionata = null;

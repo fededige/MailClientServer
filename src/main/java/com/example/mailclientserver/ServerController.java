@@ -19,12 +19,13 @@ public class ServerController {
     @FXML
     private RadioButton statoServer;
 
+
     @FXML
-    public void avviaServer() throws IOException, InterruptedException {
+    public void avviaServer() throws IOException{
         if(statoServer.isSelected()){
             Thread thread;
             this.server = new Server();
-            thread = new Thread(server);
+            thread = new Thread(this.server);
             thread.setDaemon(true);
             thread.setName("Thread_del_Server");
             thread.start();
