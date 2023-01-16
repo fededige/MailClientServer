@@ -224,6 +224,7 @@ public class Server implements Runnable{
                             socket.close();
                             break;
                         default:
+                            action.setValue(this.name + "> " + "azione non riconosciuta");
                             System.err.println("codice non riconosciuto");
                     }
                 }
