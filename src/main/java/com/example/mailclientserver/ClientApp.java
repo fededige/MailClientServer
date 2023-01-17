@@ -18,9 +18,9 @@ public class ClientApp extends Application {
         try {
             controller.init(getEmailAddress(), stage);
         } catch (ClassNotFoundException e) {
-            System.err.println("Client non registrato");
+            e.printStackTrace();
         }
-        stage.setTitle("CLIENT");
+        stage.setTitle("MAIL-CLIENT");
         stage.setScene(scene);
         stage.show();
     }

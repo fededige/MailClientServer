@@ -16,8 +16,8 @@ import java.util.List;
 
 public class Client {
     private final ListProperty<Email> inboxInviate;
-    private final ListProperty<Email> inboxRicevute;
     private final ObservableList<Email> inboxContentInviate;
+    private final ListProperty<Email> inboxRicevute;
     private final ObservableList<Email> inboxContentRicevute;
     private final ListProperty<Email> inbox;
     private final ObservableList<Email> inboxContent;

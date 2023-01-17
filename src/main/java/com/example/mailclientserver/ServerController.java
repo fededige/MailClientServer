@@ -20,6 +20,8 @@ public class ServerController {
     private RadioButton statoServer;
 
 
+
+    /*avviaServer instanza il server se il radioButton è selezionato, */
     @FXML
     public void avviaServer() throws IOException{
         if(statoServer.isSelected()){

@@ -31,23 +31,24 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server implements Runnable{
     private static ServerSocket serverSocket;
     static int NUM_THREAD = 5;
-    ExecutorService pool;
+    private final ExecutorService pool;
     boolean isRunning = true;
-    private static List<String> clientsEmail = new ArrayList<>();
-    private ListProperty<StringProperty> consoleLog;
+    private static final List<String> clientsEmail = new ArrayList<>();
+    private final ListProperty<StringProperty> consoleLog;
     private static ObservableList<StringProperty> consoleLogContent;
-    private Lock lock;
+    private final Lock lock;
     String host =  "127.0.0.1";
     int port = 4445;
 
     public Server() throws IOException {
-        this.lock = new ReentrantLock();
+        this.lock = new ReentrantLock(); //TODO: cercare cosa è
         consoleLogContent = FXCollections.observableList(new LinkedList<>());
         this.consoleLog = new SimpleListProperty<>();
         this.consoleLog.set(consoleLogContent);
         updateClients();
         checkFolders();
 
+        /*instanzia il threadpool*/
         this.pool = Executors.newFixedThreadPool(NUM_THREAD, (Runnable r) -> {
             Thread t = new Thread(r); t.setDaemon(true); return t;
         });
@@ -65,7 +66,7 @@ public class Server implements Runnable{
                     i++;
                 }
                 catch (SocketException e){
-                    System.out.println("Closing ServerSocket...");
+                    System.err.println("Closing ServerSocket...");
                 }
             }
             System.out.println("Server stopped ");
@@ -75,8 +76,9 @@ public class Server implements Runnable{
         }
     }
 
+
+    /*stop termina il threadpool e termina il thread del server*/
     public void stop() {
-        System.out.println("Close: " + Thread.currentThread().getName());
         pool.shutdown();
         isRunning = false;
 
@@ -88,20 +90,20 @@ public class Server implements Runnable{
 
         try {
             System.out.println("chiudo pool...");
-            if (!pool.awaitTermination(2, TimeUnit.SECONDS)) {
+            if (!pool.awaitTermination(1, TimeUnit.SECONDS)) {
                 System.out.println("shutdownNow");
                 pool.shutdownNow();
                 if (!pool.awaitTermination(0, TimeUnit.SECONDS))
                     System.err.println("pool non terminato");
             }
         } catch (InterruptedException ie) {
-            System.out.println("ie");
             pool.shutdownNow();
-            //TODO vedi qui
             Thread.currentThread().interrupt();
         }
     }
 
+
+    /*aggiunge tutti i client registrati in clientsEmail*/
     private static void updateClients() throws IOException{
         Path inputFilePath = Paths.get("D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/clients_emails.txt");
         try(BufferedReader fileInputReader = Files.newBufferedReader(inputFilePath, StandardCharsets.UTF_8)){
@@ -112,6 +114,7 @@ public class Server implements Runnable{
         }
     }
 
+    /*controlla che ci siano le cartelle di tutti gli utenti registrati, se non ci sono le crea*/
     private static void checkFolders() throws IOException {
         String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle";
         File file = new File(casellePath);
@@ -131,6 +134,7 @@ public class Server implements Runnable{
         }
     }
 
+    /*controllo della correttezza delle sotto cartelle dei client registrati*/
     private static boolean folderIsValid(String nomeClient, String casellePath) {
         File file = new File(casellePath+"/"+nomeClient);
         String[] subDirectories = file.list();
@@ -146,17 +150,16 @@ public class Server implements Runnable{
     }
 
 
-
+    /*classe innestata per permettere di gestire ogni connessione su un thread separato*/
     class ThreadedServer implements Runnable{
-        Socket socket = null;
-        private int name;
-        private List<String> clientEmails;
-        private StringProperty action;
+        Socket socket;
+        private final int name;
+        private final List<String> clientEmails;
+        private final StringProperty action;
         private Lock lock;
 
         public ThreadedServer(Socket incoming, int name, List<String> clientEmails, Lock lock) {
             this.action = new SimpleStringProperty("connessione avvenuta");
-            System.out.println("connesione avvenuta");
             this.socket = incoming;
             this.name = name;
             this.clientEmails = clientEmails;
@@ -197,18 +200,28 @@ public class Server implements Runnable{
                             break;
                         case 3:
                             Email messaggioDaEliminare = (Email) m.getContent();
-                            if (messaggioDaEliminare != null)
+                            if (messaggioDaEliminare != null){
                                 outStream.writeObject(true);
-                            m = (Messaggio) inStream.readObject();
-                            String clientReq = (String) m.getContent();
-                            if (clientReq != null)
-                                outStream.writeObject(true);
-                            m = (Messaggio) inStream.readObject();
-                            String casella = (String) m.getContent();
-                            if (messaggioDaEliminare != null) {
-                                eliminaMail(clientReq, messaggioDaEliminare, casella);
-                                System.out.println("in elimina mail " + Thread.currentThread().getName());
-                                action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
+                                m = (Messaggio) inStream.readObject();
+                                String clientReq = (String) m.getContent();
+                                if (clientReq != null) {
+                                    outStream.writeObject(true);
+                                    m = (Messaggio) inStream.readObject();
+                                    String casella = (String) m.getContent();
+                                    try{
+                                        eliminaMail(clientReq, messaggioDaEliminare, casella);
+                                        action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
+                                        System.out.println("cancellazione andata a buon fine");
+                                        outStream.writeObject(true);
+                                    }catch (IOException e){
+                                        outStream.writeObject(false);
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    outStream.writeObject(false);
+                                }
+                            } else {
+                                outStream.writeObject(false);
                             }
                             break;
                         case 4:
@@ -231,7 +244,6 @@ public class Server implements Runnable{
                             System.err.println("codice non riconosciuto");
                     }
                 }
-                System.out.println("Client connesso!! -- " + Thread.currentThread().getName());
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             } finally {
@@ -263,9 +275,7 @@ public class Server implements Runnable{
         }
 
         private synchronized void smistaEmail(Email emailcompleta) {
-            System.out.println("dentro smistaEmail");
             this.lock.lock();
-            System.out.println("dentro smistaEmail dopo lock");
             String casellePath = "D:/informatica/anno2023/Programmazione III/MailClientServer/src/main/java/com/example/mailclientserver/caselle/";
             try {
                 String[] tempo = (java.time.LocalDateTime.now().toString().substring(0, 24)).split(":");
@@ -291,6 +301,7 @@ public class Server implements Runnable{
         }
 
 
+        /*controllo se il client è registrato*/
         private String checkEmail(String emailAddress) {
             return clientEmails.contains(emailAddress) ? emailAddress : "Client inesistente";
         }
