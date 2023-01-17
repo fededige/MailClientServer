@@ -178,7 +178,7 @@ public class Server implements Runnable{
                             String messaggio = "controllo di : " + emailAddr;
                             emailAddr = checkEmail(emailAddr);
                             outStream.writeObject(emailAddr);
-                            action.setValue(this.name + "> " + messaggio + (emailAddr.equals("Client inesistente") ? ": Cliente inesistente" : ": Client esistente"));
+                            action.setValue(this.name + "> " + messaggio + (emailAddr.equals("Client inesistente") ? ": Client inesistente" : ": Client esistente"));
                             break;
                         case 1:
                             Email emailcompleta = (Email) m.getContent();

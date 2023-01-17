@@ -134,11 +134,17 @@ public class ClientController {
         System.out.println("in init");
         outStream.writeObject(new Messaggio(0, emailAddress));
         System.out.println("dopo prima richiesta");
-        if(!inStream.readObject().equals("Cliente inesistente")){
+        if(!inStream.readObject().equals("Client inesistente")){
             client = new Client(emailAddress);
             updateEmailList();
             updateClientList();
             client.setInboxContent(client.inboxPropertyRicevute());
+        }else{
+            System.out.println("Client inesistente");
+            outStream.writeObject(new Messaggio(6, null));
+            socket.close();
+            Platform.exit();
+            System.exit(0);
         }
 
         stage.setOnCloseRequest(t -> {
