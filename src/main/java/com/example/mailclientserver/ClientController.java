@@ -277,6 +277,18 @@ public class ClientController {
         showTooltip(stage, AContent, AContent.getText());
     }
 
+    @FXML
+    public void mostraClientEnter(){
+        Stage stage = (Stage) emailAddressLabel.getScene().getWindow();
+        showTooltip(stage, emailAddressLabel, emailAddressLabel.getText());
+    }
+
+    @FXML
+    public void mostraClientExit(){
+        Stage stage = (Stage) emailAddressLabel.getScene().getWindow();
+        showTooltip(stage, emailAddressLabel, emailAddressLabel.getText());
+    }
+
     public static void showTooltip(Stage owner, Control control, String tooltipText){
         Point2D p = control.localToScene(0, 23.0);
 

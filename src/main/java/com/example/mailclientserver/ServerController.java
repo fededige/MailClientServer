@@ -30,9 +30,12 @@ public class ServerController {
             thread.setName("Thread_del_Server");
             thread.start();
             consoleListener();
+            consoleTextArea.appendText("Server> Server online\n");
         }else{
             if(this.server != null){
                 this.server.stop();
+                consoleTextArea.appendText("Server> Server offline\n");
+
             }
         }
     }

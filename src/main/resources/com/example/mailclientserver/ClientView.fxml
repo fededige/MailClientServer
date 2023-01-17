@@ -19,7 +19,7 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.mailclientserver.ClientController">
    <left>
-      <VBox prefHeight="700.0" prefWidth="231.0" spacing="20.0" styleClass="primary-color" stylesheets="@styles.css" BorderPane.alignment="CENTER">
+      <VBox prefHeight="700.0" prefWidth="251.0" spacing="20.0" styleClass="primary-color" stylesheets="@styles.css" BorderPane.alignment="CENTER">
          <children>
             <VBox prefHeight="506.0" prefWidth="300.0">
                <children>
@@ -98,12 +98,12 @@
          <children>
             <HBox alignment="CENTER" prefHeight="50.0" prefWidth="380.0" spacing="10.0">
                <children>
-                  <Label text="Inbox">
+                  <Label prefHeight="30.0" prefWidth="56.0" text="Inbox">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
-                  <Pane prefHeight="50.0" prefWidth="163.0" />
+                  <Pane prefHeight="46.0" prefWidth="134.0" />
                   <MenuButton fx:id="sceltaInviateRicevute" mnemonicParsing="false" text="Ricevute">
                     <items>
                       <MenuItem mnemonicParsing="false" onAction="#showInviate" text="Inviate" />
@@ -120,12 +120,12 @@
                   <Insets top="5.0" />
                </VBox.margin>
             </HBox>
-            <ListView fx:id="listEmail" onMouseClicked="#mostraMail" prefHeight="655.0" prefWidth="359.0" />
+            <ListView fx:id="listEmail" onMouseClicked="#mostraMail" prefHeight="651.0" prefWidth="380.0" />
          </children>
       </VBox>
    </center>
    <right>
-      <VBox prefHeight="700.0" prefWidth="689.0" BorderPane.alignment="CENTER">
+      <VBox prefHeight="700.0" prefWidth="672.0" BorderPane.alignment="CENTER">
          <children>
             <HBox alignment="CENTER_RIGHT" prefHeight="70.0" prefWidth="650.0" spacing="15.0">
                <children>
@@ -225,7 +225,7 @@
                               <Font size="20.0" />
                            </font>
                         </Label>
-                        <TextField fx:id="AContent" editable="false" onMouseClicked="#mostraTuttiDest" prefHeight="26.0" prefWidth="615.0" />
+                        <TextField fx:id="AContent" editable="false" onMouseClicked="#mostraTuttiDest" prefHeight="26.0" prefWidth="599.0" />
                      </children>
                      <VBox.margin>
                         <Insets left="15.0" right="15.0" />
