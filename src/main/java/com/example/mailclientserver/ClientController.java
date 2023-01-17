@@ -131,8 +131,9 @@ public class ClientController {
 
         if(client != null)
             throw new IllegalStateException("Model can only be initialized once");
-
+        System.out.println("in init");
         outStream.writeObject(new Messaggio(0, emailAddress));
+        System.out.println("dopo prima richiesta");
         if(!inStream.readObject().equals("Cliente inesistente")){
             client = new Client(emailAddress);
             updateEmailList();

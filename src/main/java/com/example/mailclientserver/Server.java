@@ -49,8 +49,8 @@ public class Server implements Runnable{
         checkFolders();
 
         this.pool = Executors.newFixedThreadPool(NUM_THREAD, (Runnable r) -> {
-            Thread t = new Thread(r); t.setDaemon(true); return t; });
-
+            Thread t = new Thread(r); t.setDaemon(true); return t;
+        });
     }
 
     public void run() {
@@ -170,7 +170,8 @@ public class Server implements Runnable{
                 inStream = new ObjectInputStream(socket.getInputStream());
                 outStream = new ObjectOutputStream(socket.getOutputStream());
                 Messaggio m = null;
-                while((m = (Messaggio) inStream.readObject()) != null && !Thread.currentThread().isInterrupted()){
+                boolean flag = true;
+                while(flag && (m = (Messaggio) inStream.readObject()) != null && !Thread.currentThread().isInterrupted()){
                     switch (m.getCod()) {
                         case 0:
                             String emailAddr = (String) m.getContent();
@@ -222,6 +223,7 @@ public class Server implements Runnable{
                             System.out.println("case 6");
                             action.setValue(this.name + "> " + "chiusura socket");
                             socket.close();
+                            flag = false;
                             break;
                         default:
                             action.setValue(this.name + "> " + "azione non riconosciuta");
