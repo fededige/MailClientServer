@@ -207,6 +207,7 @@ public class Server implements Runnable{
                             String casella = (String) m.getContent();
                             if (messaggioDaEliminare != null) {
                                 eliminaMail(clientReq, messaggioDaEliminare, casella);
+                                System.out.println("in elimina mail " + Thread.currentThread().getName());
                                 action.setValue(this.name + "> " + "messaggio eliminato: " + messaggioDaEliminare.getId());
                             }
                             break;

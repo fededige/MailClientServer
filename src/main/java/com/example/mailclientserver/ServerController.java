@@ -40,9 +40,8 @@ public class ServerController {
     private void consoleListener() {
         consoleLog = server.ConsoleLogProperty();
         consoleLog.addListener((InvalidationListener) change -> {
-            for(StringProperty c : consoleLog){
-                c.addListener((observableValue) -> Platform.runLater(()-> consoleTextArea.appendText(c.getValue() + "\n")));
-            }
+            StringProperty c = consoleLog.get(consoleLog.size() - 1);
+            c.addListener((observableValue) -> Platform.runLater(()-> consoleTextArea.appendText(c.getValue() + "\n")));
         });
     }
 }
