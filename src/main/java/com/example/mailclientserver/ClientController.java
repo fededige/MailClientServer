@@ -3,7 +3,6 @@ package com.example.mailclientserver;
 import com.example.mailclientserver.messaggio.Messaggio;
 import com.example.mailclientserver.model.Email;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
@@ -13,7 +12,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -104,8 +102,8 @@ public class ClientController {
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
         exec.scheduleAtFixedRate(
                 new Update(),
-                30, //temp
-                30,
+                5, //temp
+                5,
                 TimeUnit.SECONDS
         );
 
@@ -365,8 +363,6 @@ public class ClientController {
             scriviMail(null, emailSelezionata.getSubject(), emailSelezionata.getText());
         }
     }
-
-    //TODO: controllare client multipli
 
     /*modifica il contenuto dell'inbox del client mettendoci solo le mail ricevute*/
     @FXML
