@@ -41,7 +41,7 @@ public class Server implements Runnable{
     int port = 4445;
 
     public Server() throws IOException {
-        this.lock = new ReentrantLock(); //TODO: cercare cosa è
+        this.lock = new ReentrantLock();
         consoleLogContent = FXCollections.observableList(new LinkedList<>());
         this.consoleLog = new SimpleListProperty<>();
         this.consoleLog.set(consoleLogContent);

@@ -206,7 +206,7 @@ public class ClientController {
     private void updateEmailList() throws ClassNotFoundException {
         try {
             (this.outStream).writeObject(new Messaggio(2, client.emailAddressProperty().getValue().split("@")[0]));
-            client.setInboxContentInviate((List<Email>) inStream.readObject()); //TODO risolvere errore
+            client.setInboxContentInviate((List<Email>) inStream.readObject());
             (this.outStream).writeObject(new Messaggio(5, client.emailAddressProperty().getValue().split("@")[0]));
             client.setInboxContentRicevute((List<Email>) inStream.readObject());
         } catch (IOException e){
